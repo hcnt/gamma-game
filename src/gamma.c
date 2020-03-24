@@ -1,6 +1,13 @@
 #include "gamma.h"
 #include "stdlib.h"
 
+struct gamma {
+    uint32_t width;
+    uint32_t height;
+    uint32_t players;
+    uint32_t areas;
+};
+
 static bool areParametersForNewGameValid(uint32_t width, uint32_t height,
                                          uint32_t players, uint32_t areas){
     if(width <= 0){
