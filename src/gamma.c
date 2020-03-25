@@ -9,7 +9,7 @@ struct gamma {
 };
 
 static bool areParametersForNewGameValid(uint32_t width, uint32_t height,
-                                         uint32_t players, uint32_t areas){
+                                         uint32_t players){
     if(width <= 0){
         return false;
     }
@@ -19,15 +19,12 @@ static bool areParametersForNewGameValid(uint32_t width, uint32_t height,
     if(players <= 0){
         return false;
     }
-    if(areas < 0){
-        return false;
-    }
     return true;
 }
 
 gamma_t* gamma_new(uint32_t width, uint32_t height,
                    uint32_t players, uint32_t areas){
-    if(!areParametersForNewGameValid(width,height,players,areas)){
+    if(!areParametersForNewGameValid(width,height,players)){
         return NULL;
     }
     gamma_t* game = malloc(sizeof(gamma_t));
