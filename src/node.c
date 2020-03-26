@@ -8,7 +8,7 @@ node create_node(uint32_t x,uint32_t y){
     node newNode = malloc(sizeof(struct pawn));
     newNode->left = NULL;
     newNode->right = NULL;
-    newNode->parent = NULL;
+    newNode->parent = newNode;
     newNode->x = x;
     newNode->y = y;
 }
