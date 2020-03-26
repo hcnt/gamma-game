@@ -17,4 +17,6 @@ node find(node root, uint32_t x, uint32_t y);
 
 bool is_bigger(node a, uint32_t x, uint32_t y);
 
+node delete(node t, uint32_t x, uint32_t y);
+
 #endif
