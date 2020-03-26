@@ -143,7 +143,7 @@ static int merge(node new_node, node* neighbours) {
     node random_neighbour = get_random_neighbour(neighbours);
     new_node->parent = random_neighbour;
     node root = find_root(random_neighbour);
-    return merge_neighbours(new_node,root, neighbours);
+    return merge_neighbours(new_node, root, neighbours);
 }
 
 static bool are_gamma_move_parameters_valid(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
@@ -190,30 +190,30 @@ bool gamma_move(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
 }
 
 //TODO implement removing node
-static uint32_t remove_node(gamma_t* g, uint32_t player, uint32_t x,uint32_t y);
+static uint32_t remove_node(gamma_t* g, uint32_t player, uint32_t x, uint32_t y);
 
-bool gamma_golden_move(gamma_t *g, uint32_t player, uint32_t x, uint32_t y){
-    if(g == NULL) return false;
+bool gamma_golden_move(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
+    if (g == NULL) return false;
     if (player > g->players_number || player == 0) {
         return false;
     }
     player -= 1;
 
-    if(!g->players[player].golden_move_available){
+    if (!g->players[player].golden_move_available) {
         return false;
     }
 
     node node_to_remove = NULL;
     uint32_t i = 0;
-    while (i < g->players_number && node_to_remove == NULL){
-        node_to_remove = find(g->players[i].pawns,x,y);
+    while (i < g->players_number && node_to_remove == NULL) {
+        node_to_remove = find(g->players[i].pawns, x, y);
         i++;
     }
     //i is one too big after last loop
     i--;
 
-    if(node_to_remove == NULL) return false;
-    if(i == player) return false;
+    if (node_to_remove == NULL) return false;
+    if (i == player) return false;
 
 //    remove_node(g,i,x,y);
     return true;
@@ -243,7 +243,8 @@ bool gamma_golden_possible(gamma_t* g, uint32_t player) {
     }
     return false;
 }
-uint64_t gamma_free_fields(gamma_t *g, uint32_t player){
+
+uint64_t gamma_free_fields(gamma_t* g, uint32_t player) {
     if (g == NULL)
         return 0;
     if (player > g->players_number || player == 0) {
@@ -255,7 +256,7 @@ uint64_t gamma_free_fields(gamma_t *g, uint32_t player){
         return 0;
     }
     uint64_t sum = 0;
-    for(uint32_t i= 0; i < g->players_number;i++){
+    for (uint32_t i = 0; i < g->players_number; i++) {
         sum += g->players[i].pawns_number;
     }
     return g->height * g->width - sum;
