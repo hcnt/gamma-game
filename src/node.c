@@ -2,7 +2,16 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "node.h"
 
+node create_node(uint32_t x,uint32_t y){
+    node newNode = malloc(sizeof(struct pawn));
+    newNode->left = NULL;
+    newNode->right = NULL;
+    newNode->parent = NULL;
+    newNode->x = x;
+    newNode->y = y;
+}
 
 bool is_bigger(node a, uint32_t x, uint32_t y) {
     if (a == NULL) {
