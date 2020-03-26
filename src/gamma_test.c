@@ -73,7 +73,7 @@ int main() {
   assert(gamma_free_fields(g, 2) == 92);
   assert(!gamma_move(g, 2, 0, 1));
   assert(gamma_golden_possible(g, 2));
-//  assert(!gamma_golden_move(g, 2, 0, 1));
+  assert(!gamma_golden_move(g, 2, 0, 1));
 //  assert(gamma_golden_move(g, 2, 5, 5));
 //  assert(!gamma_golden_possible(g, 2));
 //  assert(gamma_move(g, 2, 6, 6));

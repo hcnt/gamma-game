@@ -176,6 +176,36 @@ bool gamma_move(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
     return true;
 }
 
+//TODO implement removing node
+static uint32_t remove_node(gamma_t* g, uint32_t player, uint32_t x,uint32_t y);
+
+bool gamma_golden_move(gamma_t *g, uint32_t player, uint32_t x, uint32_t y){
+    if(g == NULL) return false;
+    if (player > g->players_number || player == 0) {
+        return false;
+    }
+    player -= 1;
+
+    if(!g->players[player].golden_move_available){
+        return false;
+    }
+
+    node node_to_remove = NULL;
+    uint32_t i = 0;
+    while (i < g->players_number && node_to_remove == NULL){
+        node_to_remove = find(g->players[i].pawns,x,y);
+        i++;
+    }
+    //i is one too big after last loop
+    i--;
+
+    if(node_to_remove == NULL) return false;
+    if(i == player) return false;
+
+//    remove_node(g,i,x,y);
+    return true;
+}
+
 uint64_t gamma_busy_fields(gamma_t* g, uint32_t player) {
     if (g == NULL) return 0;
     if (player > g->players_number || player == 0) {
