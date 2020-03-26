@@ -9,6 +9,7 @@ struct gamma {
     uint32_t areas;
     node* players_pawns;
     uint32_t* players_areas;
+    uint32_t* players_number_of_pawns;
 };
 
 static bool areParametersForNewGameValid(uint32_t width, uint32_t height,
@@ -36,6 +37,7 @@ gamma_t* gamma_new(uint32_t width, uint32_t height,
     game->players = players;
     game->players_pawns = malloc(players * sizeof(node));
     game->players_areas = calloc(players, sizeof(uint32_t));
+    game->players_number_of_pawns = calloc(players, sizeof(uint32_t));
     game->areas = areas;
     return game;
 }
@@ -159,5 +161,6 @@ bool gamma_move(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
         g->players_areas[player] -= merge(newNode, neighbours);
     }
     add(&(g->players_pawns[player]), newNode);
+    g->players_number_of_pawns[player]++;
     return true;
 }
