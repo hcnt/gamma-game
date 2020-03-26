@@ -109,13 +109,27 @@ static node find_root(node n) {
     return tmp;
 }
 
-static int merge_neighbours(node new_root, node* neighbours) {
+//static int merge_neighbours(node new_root, node* neighbours) {
+//    node tmp;
+//    int merged_areas = 0;
+//    for (int i = 0; i < 4; i++) {
+//        if (neighbours[i] != NULL) {
+//            tmp = find_root(neighbours[i]);
+//            if (tmp != new_root) {
+//                merged_areas++;
+//                neighbours[i]->parent = new_root;
+//            }
+//        }
+//    }
+//    return merged_areas;
+//}
+static int merge_neighbours(node new_root, node root, node* neighbours) {
     node tmp;
     int merged_areas = 0;
     for (int i = 0; i < 4; i++) {
         if (neighbours[i] != NULL) {
             tmp = find_root(neighbours[i]);
-            if (tmp != new_root) {
+            if (tmp != root) {
                 merged_areas++;
                 neighbours[i]->parent = new_root;
             }
@@ -127,10 +141,9 @@ static int merge_neighbours(node new_root, node* neighbours) {
 //returns number of merged areas
 static int merge(node new_node, node* neighbours) {
     node random_neighbour = get_random_neighbour(neighbours);
-    node new_root = find_root(random_neighbour);
-    new_node->parent = new_root;
-    return merge_neighbours(new_root, neighbours);
-
+    new_node->parent = random_neighbour;
+    node root = find_root(random_neighbour);
+    return merge_neighbours(new_node,root, neighbours);
 }
 
 static bool are_gamma_move_parameters_valid(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
