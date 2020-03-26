@@ -1,3 +1,5 @@
+#ifndef NODE_H
+#define NODE_H
 typedef struct pawn* node;
 struct pawn {
     uint32_t x;
@@ -7,10 +9,12 @@ struct pawn {
     node right;
 };
 
-node create_node(uint32_t x,uint32_t y);
+node create_node(uint32_t x, uint32_t y);
 
 void add(node* root_ptr, node element);
 
 node find(node root, uint32_t x, uint32_t y);
 
 bool is_bigger(node a, uint32_t x, uint32_t y);
+
+#endif

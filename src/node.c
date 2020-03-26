@@ -11,6 +11,7 @@ node create_node(uint32_t x,uint32_t y){
     newNode->parent = newNode;
     newNode->x = x;
     newNode->y = y;
+    return newNode;
 }
 
 bool is_bigger(node a, uint32_t x, uint32_t y) {
@@ -25,7 +26,7 @@ bool is_bigger(node a, uint32_t x, uint32_t y) {
     }
     if (a->y > y) {
         return true;
-    } else if (a->y <= y) {
+    } else {
         return false;
     }
 }
