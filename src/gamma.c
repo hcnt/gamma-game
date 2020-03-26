@@ -11,7 +11,7 @@ struct gamma {
     player* players;
 };
 
-static player get_player(gamma_t* g, uint32_t i){
+static player get_player(gamma_t* g, uint32_t i) {
     return g->players[i];
 }
 
@@ -44,6 +44,7 @@ gamma_t* gamma_new(uint32_t width, uint32_t height,
         game->players[i].areas = 0;
         game->players[i].pawns_number = 0;
         game->players[i].pawns = NULL;
+        game->players[i].golden_move_available = true;
     }
     return game;
 }
@@ -56,7 +57,7 @@ void gamma_delete(gamma_t* g) {
 
 static bool is_node_in_any_player(gamma_t* g, uint32_t x, uint32_t y) {
     for (uint32_t i = 0; i < g->players_number; i++) {
-        if (find(get_player(g,i).pawns, x, y) != NULL) {
+        if (find(get_player(g, i).pawns, x, y) != NULL) {
             return true;
         }
     }
@@ -66,16 +67,16 @@ static bool is_node_in_any_player(gamma_t* g, uint32_t x, uint32_t y) {
 static node* get_neighbours(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
     node* neighbours = calloc(4, sizeof(node));
     if (x < g->height) {
-        neighbours[0] = find(get_player(g,player).pawns, x + 1, y);
+        neighbours[0] = find(get_player(g, player).pawns, x + 1, y);
     }
     if (y < g->width) {
-        neighbours[1] = find(get_player(g,player).pawns, x, y + 1);
+        neighbours[1] = find(get_player(g, player).pawns, x, y + 1);
     }
     if (x > 0) {
-        neighbours[2] = find(get_player(g,player).pawns, x - 1, y);
+        neighbours[2] = find(get_player(g, player).pawns, x - 1, y);
     }
     if (y > 0) {
-        neighbours[3] = find(get_player(g,player).pawns, x, y - 1);
+        neighbours[3] = find(get_player(g, player).pawns, x, y - 1);
     }
     return neighbours;
 }
@@ -139,6 +140,9 @@ static bool are_gamma_move_parameters_valid(gamma_t* g, uint32_t player, uint32_
     if (player > g->players_number) {
         return false;
     }
+    if (player == 0) {
+        return false;
+    }
     if (x > g->width) {
         return false;
     }
@@ -152,6 +156,7 @@ bool gamma_move(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
     if (!are_gamma_move_parameters_valid(g, player, x, y)) {
         return false;
     }
+    player -= 1;
     if (is_node_in_any_player(g, x, y)) {
         return false;
     }
@@ -173,8 +178,25 @@ bool gamma_move(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
 
 uint64_t gamma_busy_fields(gamma_t* g, uint32_t player) {
     if (g == NULL) return 0;
-    if (player > g->players_number) {
+    if (player > g->players_number || player == 0) {
         return 0;
     }
+    player -= 1;
     return g->players[player].pawns_number;
+}
+
+bool gamma_golden_possible(gamma_t* g, uint32_t player) {
+    if (g == NULL)
+        return false;
+    if (player > g->players_number || player == 0) {
+        return false;
+    }
+    player -= 1;
+    if (!g->players[player].golden_move_available) return false;
+    for (uint32_t i = 0; i < g->players_number; i++) {
+        if (i != player && get_player(g, i).pawns_number > 0) {
+            return true;
+        }
+    }
+    return false;
 }
