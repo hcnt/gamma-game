@@ -164,3 +164,10 @@ bool gamma_move(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
     g->players_number_of_pawns[player]++;
     return true;
 }
+uint64_t gamma_busy_fields(gamma_t *g, uint32_t player){
+    if(g == NULL) return 0;
+    if(player > g->players){
+        return 0;
+    }
+    return g->players_number_of_pawns[player];
+}
