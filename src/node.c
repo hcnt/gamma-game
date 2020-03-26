@@ -50,9 +50,11 @@ void add(node* root_ptr, node element) {
     }
     if (*root_ptr == NULL) {
         *root_ptr = element;
+        return;
     }
     if (is_bigger(element, (*root_ptr)->x, (*root_ptr)->y)) {
         add(&(*root_ptr)->right, element);
+        return;
     }
     add(&(*root_ptr)->left, element);
 }
