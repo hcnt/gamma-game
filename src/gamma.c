@@ -2,6 +2,7 @@
 #include "stdlib.h"
 #include "node.h"
 #include "player.h"
+#include "board.h"
 
 struct gamma {
     uint32_t width;
@@ -9,6 +10,7 @@ struct gamma {
     uint32_t players_number;
     uint32_t areas;
     player* players;
+    board_t b;
 };
 
 static player get_player(gamma_t* g, uint32_t i) {
@@ -170,22 +172,14 @@ bool gamma_move(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
         return false;
     }
     player -= 1;
-    if (is_node_in_any_player(g, x, y)) {
+    if (check_field(g->b,x,y) == 0 ) {
         return false;
     }
-    node* neighbours = get_neighbours(g, player, x, y);
-    bool added_to_area_flag = is_added_to_area(neighbours);
-    if (g->players[player].areas == g->areas && !added_to_area_flag) {
+    bool added_to_area_flag = check_if_any_neighbour_is_taken_by_player(g->b, player, x, y);
+    if(get_number_of_players_areas(g->b,player) == g->areas && added_to_area_flag){
         return false;
     }
-    node newNode = create_node(x, y);
-    if (!added_to_area_flag) {
-        (g->players[player]).areas++;
-    } else {
-        g->players[player].areas -= merge(newNode, neighbours);
-    }
-    add(&(g->players[player].pawns), newNode);
-    g->players[player].pawns_number++;
+    add_pawn(g->b,x,y);
     return true;
 }
 
