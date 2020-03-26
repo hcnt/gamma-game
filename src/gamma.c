@@ -200,3 +200,20 @@ bool gamma_golden_possible(gamma_t* g, uint32_t player) {
     }
     return false;
 }
+uint64_t gamma_free_fields(gamma_t *g, uint32_t player){
+    if (g == NULL)
+        return 0;
+    if (player > g->players_number || player == 0) {
+        return 0;
+    }
+    player -= 1;
+    if (g->players[player].areas == g->areas) {
+        //TODO implement counting areas borders
+        return 0;
+    }
+    uint64_t sum = 0;
+    for(uint32_t i= 0; i < g->players_number;i++){
+        sum += g->players[i].pawns_number;
+    }
+    return g->height * g->width - sum;
+}
