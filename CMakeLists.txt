@@ -25,7 +25,7 @@ set(SOURCE_FILES
         src/gamma.h
         src/gamma_test.c
         src/node.c
-        src/player.h)
+        src/player.h src/board.h)
 
 # Wskazujemy plik wykonywalny.
 add_executable(gamma ${SOURCE_FILES})
