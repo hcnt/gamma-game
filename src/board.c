@@ -98,7 +98,8 @@ static void update_edges_when_adding(board_t b, uint32_t player, uint32_t x, uin
             } else if (number_of_neighbours_taken_by_player(b, n->player->player_index + 1, x, y) == 1) {
                 n->player->area_edges--;
             }
-        } else if (!number_of_neighbours_taken_by_player(b, player+1, x + (i == 0) - (i == 2), y + (i == 1) - (i == 3))) {
+        } else if (!number_of_neighbours_taken_by_player(b, player + 1, x + (i == 0) - (i == 2),
+                                                         y + (i == 1) - (i == 3))) {
             number_of_new_edges++;
         }
     }
@@ -118,11 +119,12 @@ static void update_edges_when_removing(board_t b, uint32_t player, uint32_t x, u
         n = neighbours[i];
         if (n != NULL) {
             if (n->player->player_index == player) {
-                at_least_one_neighbour=true;
+                at_least_one_neighbour = true;
             } else if (number_of_neighbours_taken_by_player(b, n->player->player_index + 1, x, y) == 1) {
                 n->player->area_edges++;
             }
-        } else if (!number_of_neighbours_taken_by_player(b, player+1, x + (i == 0) - (i == 2), y + (i == 1) - (i == 3))) {
+        } else if (!number_of_neighbours_taken_by_player(b, player + 1, x + (i == 0) - (i == 2),
+                                                         y + (i == 1) - (i == 3))) {
             number_of_new_edges++;
         }
     }
@@ -172,7 +174,7 @@ void add_pawn(board_t b, uint32_t player, uint32_t x, uint32_t y) {
     set_neighbours(newNode, neighbours);
     free(neighbours);
 
-    update_edges_when_adding(b, player-1, x, y);
+    update_edges_when_adding(b, player - 1, x, y);
 
     merge(newNode);
     add(&(b->node_tree), newNode);
@@ -271,4 +273,38 @@ void update_areas(board_t b) {
 
 uint64_t get_number_of_players_area_edges(board_t b, uint32_t player) {
     return b->players[player - 1]->area_edges;
+}
+
+void fill_board(node n, char** buffer) {
+    if(!n)
+        return;
+    buffer[n->y][n->x] = n->player->player_index + 1 + '0';
+    fill_board(n->left,buffer);
+    fill_board(n->right,buffer);
+}
+
+#include <stdio.h>
+char* print_board(board_t b) {
+    char** board = malloc(b->height * sizeof(char*));
+    for (uint64_t i = 0; i < b->height; i++) {
+        board[i] = malloc((b->width + 1) * sizeof(char));
+        for (uint64_t j = 0; j < b->width; j++) {
+            board[i][j] = '.';
+        }
+        board[i][b->width] = '\n';
+    }
+    fill_board(b->node_tree, board);
+
+    uint64_t length = (b->height * (b->width + 1) + 1) * sizeof(char);
+    char* string = malloc(length);
+    for (uint64_t i = 0; i < b->height; i++) {
+        for (uint64_t j = 0; j < b->width+1; j++) {
+            string[i*(b->width+1) + j] = board[b->height - 1 -i][j];
+//            printf("%d ", string[i*b->height + j]);
+        }
+    }
+    printf("%s",string);
+    printf("\n");
+    string[length-1] = '\0';
+    return string;
 }

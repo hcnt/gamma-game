@@ -86,12 +86,11 @@ int main() {
     assert(gamma_free_fields(g, 1) == 8);
     assert(gamma_busy_fields(g, 2) == 4);
     assert(gamma_free_fields(g, 2) == 10);
-//
-//  char *p = gamma_board(g);
-//  assert(p);
-//  assert(strcmp(p, board) == 0);
-//  printf(p);
-//  free(p);
+
+    char* p = gamma_board(g);
+    assert(p);
+    assert(strcmp(p, board) == 0);
+    free(p);
 
     gamma_delete(g);
     return 0;

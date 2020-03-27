@@ -145,3 +145,6 @@ uint64_t gamma_free_fields(gamma_t* g, uint32_t player) {
     return g->width * g->height - get_number_of_pawns(g->b);
 }
 
+char* gamma_board(gamma_t* g){
+    return print_board(g->b);
+}
