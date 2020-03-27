@@ -11,6 +11,7 @@ struct pawn {
     node right;
     node neighbours[4];
     player* player;
+    bool was_visited;
 };
 
 node create_node(uint32_t x, uint32_t y,player* p);

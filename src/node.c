@@ -10,6 +10,7 @@ node create_node(uint32_t x, uint32_t y,player* p) {
     newNode->right = NULL;
     newNode->parent = newNode;
     newNode->player = p;
+    newNode->was_visited = false;
     newNode->x = x;
     newNode->y = y;
     for(int i = 0; i< 4; i++){
