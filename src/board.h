@@ -40,7 +40,7 @@ uint64_t get_number_of_free_fields(board_t b);
 
 uint32_t get_number_of_border_fields(board_t b, uint32_t player);
 
-bool check_if_any_neighbour_is_taken_by_player(board_t b, uint32_t player, uint32_t x, uint32_t y);
+int number_of_neighbours_taken_by_player(board_t b, uint32_t player, uint32_t x, uint32_t y);
 
 void update_areas(board_t b);
 

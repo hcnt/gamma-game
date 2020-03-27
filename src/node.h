@@ -16,6 +16,8 @@ struct pawn {
 
 node create_node(uint32_t x, uint32_t y,player* p);
 
+void set_neighbours(node n, node* neighbours);
+
 void add(node* root_ptr, node element);
 
 node find(node root, uint32_t x, uint32_t y);

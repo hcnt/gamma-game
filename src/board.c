@@ -71,7 +71,63 @@ static void merge(node new_node) {
     }
 }
 
+static int number_of_same_color_neighbours(node n) {
+    int number = 0;
+    for (int i = 0; i < 4; i++) {
+        if (n->neighbours[i] != NULL && n->neighbours[i]->player == n->player) {
+            number++;
+        }
+    }
+    return number;
+}
 
+static void update_edges_when_adding(board_t b, uint32_t player, uint32_t x, uint32_t y) {
+    int number_of_new_edges = 0;
+    bool at_least_one_neighbour = false;
+    node* neighbours = get_neighbours(b, x, y);
+    node n;
+    for (int i = 0; i < 4; i++) {
+        if (x + (i == 0) - (i == 2) < 0 || y + (i == 1) - (i == 3) < 0 || x + (i == 0) - (i == 2) >= b->width ||
+            y + (i == 1) - (i == 3) >= b->height) {
+            continue;
+        }
+        n = neighbours[i];
+        if (n != NULL) {
+            if (n->player->player_index == player) {
+                at_least_one_neighbour++;
+            } else if (number_of_neighbours_taken_by_player(b, n->player->player_index + 1, x, y) == 1) {
+                n->player->area_edges--;
+            }
+        } else if (!number_of_neighbours_taken_by_player(b, player+1, x + (i == 0) - (i == 2), y + (i == 1) - (i == 3))) {
+            number_of_new_edges++;
+        }
+    }
+    b->players[player]->area_edges += number_of_new_edges - at_least_one_neighbour;
+}
+
+static void update_edges_when_removing(board_t b, uint32_t player, uint32_t x, uint32_t y) {
+    int number_of_new_edges = 0;
+    bool at_least_one_neighbour = false;
+    node* neighbours = get_neighbours(b, x, y);
+    node n;
+    for (int i = 0; i < 4; i++) {
+        if (x + (i == 0) - (i == 2) < 0 || y + (i == 1) - (i == 3) < 0 || x + (i == 0) - (i == 2) >= b->width ||
+            y + (i == 1) - (i == 3) >= b->height) {
+            continue;
+        }
+        n = neighbours[i];
+        if (n != NULL) {
+            if (n->player->player_index == player) {
+                at_least_one_neighbour=true;
+            } else if (number_of_neighbours_taken_by_player(b, n->player->player_index + 1, x, y) == 1) {
+                n->player->area_edges++;
+            }
+        } else if (!number_of_neighbours_taken_by_player(b, player+1, x + (i == 0) - (i == 2), y + (i == 1) - (i == 3))) {
+            number_of_new_edges++;
+        }
+    }
+    b->players[player]->area_edges -= number_of_new_edges - at_least_one_neighbour;
+}
 //----------PUBLIC FUNCTIONS------------------------
 
 board_t create_board(uint32_t width, uint32_t height,
@@ -85,6 +141,7 @@ board_t create_board(uint32_t width, uint32_t height,
     for (uint32_t i = 0; i < players; i++) {
         game->players[i] = malloc(sizeof(player));
         game->players[i]->areas = 0;
+        game->players[i]->area_edges = 0;
         game->players[i]->player_index = i;
         game->players[i]->pawns_number = 0;
         game->players[i]->golden_move_available = true;
@@ -112,13 +169,10 @@ void add_pawn(board_t b, uint32_t player, uint32_t x, uint32_t y) {
     node newNode = create_node(x, y, b->players[player - 1]);
 
     node* neighbours = get_neighbours(b, x, y);
-    for (int i = 0; i < 4; ++i) {
-        if (neighbours[i] != NULL) {
-            newNode->neighbours[i] = neighbours[i];
-            neighbours[i]->neighbours[(i + 2) % 4] = newNode;
-        }
-    }
+    set_neighbours(newNode, neighbours);
     free(neighbours);
+
+    update_edges_when_adding(b, player-1, x, y);
 
     merge(newNode);
     add(&(b->node_tree), newNode);
@@ -136,12 +190,15 @@ static void remove_pawn_from_neighbours(node n, uint32_t x_to_remove, uint32_t y
 
 void remove_pawn(board_t b, uint32_t x, uint32_t y) {
     node* neighbours = get_neighbours(b, x, y);
+    uint32_t player = find(b->node_tree, x, y)->player->player_index;
     for (int i = 0; i < 4; i++) {
         if (neighbours[i] != NULL) {
             remove_pawn_from_neighbours(neighbours[i], x, y);
         }
     }
     b->node_tree = delete(b->node_tree, x, y);
+    update_edges_when_removing(b, player, x, y);
+    b->players[player]->pawns_number--;
 }
 
 uint64_t get_number_of_pawns(board_t b) {
@@ -156,14 +213,15 @@ uint64_t get_number_of_players_pawns(board_t b, uint32_t player) {
     return b->players[player - 1]->pawns_number;
 }
 
-bool check_if_any_neighbour_is_taken_by_player(board_t b, uint32_t player, uint32_t x, uint32_t y) {
+int number_of_neighbours_taken_by_player(board_t b, uint32_t player, uint32_t x, uint32_t y) {
     node* neighbours = get_neighbours(b, x, y);
+    int n = 0;
     for (int i = 0; i < 4; i++) {
         if (neighbours[i] != NULL && neighbours[i]->player->player_index == player - 1) {
-            return true;
+            n++;
         }
     }
-    return false;
+    return n;
 }
 
 void reset_areas(board_t b) {
@@ -208,4 +266,9 @@ void update_areas(board_t b) {
     reset_areas(b);
     traverse_and_update_area(b->node_tree);
     reset_visited(b->node_tree);
+}
+
+
+uint64_t get_number_of_players_area_edges(board_t b, uint32_t player) {
+    return b->players[player - 1]->area_edges;
 }

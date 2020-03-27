@@ -99,6 +99,9 @@ node delete(node t, uint32_t x, uint32_t y) {
             node tmp = min_node(t->right);
             t->x = tmp->x;
             t->y = tmp->y;
+            for(int i =0; i< 4; i++){
+                t->neighbours[i] = tmp->neighbours[i];
+            }
             t->parent = tmp->parent;
             t->right = delete(t->right, tmp->x, tmp->y);
         }
@@ -109,4 +112,12 @@ node delete(node t, uint32_t x, uint32_t y) {
         t->right = delete(t->right, x, y);
     }
     return t;
+}
+void set_neighbours(node n, node* neighbours){
+    for (int i = 0; i < 4; ++i) {
+        if (neighbours[i] != NULL) {
+            n->neighbours[i] = neighbours[i];
+            neighbours[i]->neighbours[(i + 2) % 4] = n;
+        }
+    }
 }

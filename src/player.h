@@ -9,6 +9,7 @@ typedef struct player {
     uint64_t pawns_number;
     bool golden_move_available;
     uint32_t player_index;
+    uint64_t area_edges
 } player;
 
 #endif //GAMMA_PLAYER_H

@@ -13,6 +13,8 @@ struct gamma {
     board_t b;
 };
 
+uint64_t get_number_of_players_area_edges(board_t b, uint32_t player);
+
 static player get_player(gamma_t* g, uint32_t i) {
     return g->players[i];
 }
@@ -78,7 +80,7 @@ bool gamma_move(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
     if (check_field(g->b, x, y) != 0) {
         return false;
     }
-    bool added_to_area_flag = check_if_any_neighbour_is_taken_by_player(g->b, player, x, y);
+    bool added_to_area_flag = number_of_neighbours_taken_by_player(g->b, player, x, y);
     if (get_number_of_players_areas(g->b, player) == g->areas && !added_to_area_flag) {
         return false;
     }
@@ -94,10 +96,18 @@ bool gamma_golden_move(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
     if (!g->b->players[player-1]->golden_move_available) {
         return false;
     }
+    uint32_t player_to_remove_index = find(g->b->node_tree,x,y)->player->player_index;
     remove_pawn(g->b, x, y);
     update_areas(g->b);
-    if (get_number_of_players_areas(g->b, player-1) > g->areas) {
-        add_pawn(g->b, player, x, y);
+    if (get_number_of_players_areas(g->b, player_to_remove_index+1) > g->areas) {
+        add_pawn(g->b, player_to_remove_index+1, x, y);
+        return false;
+    }
+    add_pawn(g->b, player, x, y);
+    if (get_number_of_players_areas(g->b, player) > g->areas) {
+        remove_pawn(g->b, x, y);
+        update_areas(g->b);
+        add_pawn(g->b, player_to_remove_index+1, x, y);
         return false;
     }
     return true;
@@ -129,5 +139,9 @@ uint64_t gamma_free_fields(gamma_t* g, uint32_t player) {
     if (player > g->players_number || player == 0) {
         return 0;
     }
+    if(g->b->players[player-1]->areas == g->b->max_areas) {
+        return get_number_of_players_area_edges(g->b, player);
+    }
     return g->width * g->height - get_number_of_pawns(g->b);
 }
+
