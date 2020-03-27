@@ -91,15 +91,16 @@ bool gamma_golden_move(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
     if (player > g->players_number || player == 0) {
         return false;
     }
-    if (!g->b.players[player].golden_move_available) {
+    if (!g->b->players[player-1]->golden_move_available) {
         return false;
     }
     remove_pawn(g->b, x, y);
-    update_player_areas(g->b, player);
-    if (get_number_of_players_areas(g->b, player) > g->areas) {
-        add_pawn(b, player, x, y);
+    update_areas(g->b);
+    if (get_number_of_players_areas(g->b, player-1) > g->areas) {
+        add_pawn(g->b, player, x, y);
+        return false;
     }
-
+    return true;
 }
 
 uint64_t gamma_busy_fields(gamma_t* g, uint32_t player) {
@@ -116,7 +117,7 @@ bool gamma_golden_possible(gamma_t* g, uint32_t player) {
     if (player > g->players_number || player == 0) {
         return false;
     }
-    if (!g->players[player].golden_move_available) return false;
+    if (!g->b->players[player-1]->golden_move_available) return false;
     if (get_number_of_pawns(g->b) - get_number_of_players_pawns(g->b, player) == 0) {
         return false;
     }
