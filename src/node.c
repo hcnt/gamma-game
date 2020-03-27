@@ -4,13 +4,17 @@
 #include <stdio.h>
 #include "node.h"
 
-node create_node(uint32_t x, uint32_t y) {
+node create_node(uint32_t x, uint32_t y,player* p) {
     node newNode = malloc(sizeof(struct pawn));
     newNode->left = NULL;
     newNode->right = NULL;
     newNode->parent = newNode;
+    newNode->player = p;
     newNode->x = x;
     newNode->y = y;
+    for(int i = 0; i< 4; i++){
+        newNode->neighbours[i] = NULL;
+    }
     return newNode;
 }
 

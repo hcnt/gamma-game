@@ -1,5 +1,7 @@
 #ifndef NODE_H
 #define NODE_H
+
+#include "player.h"
 typedef struct pawn* node;
 struct pawn {
     uint32_t x;
@@ -7,9 +9,11 @@ struct pawn {
     node parent;
     node left;
     node right;
+    node neighbours[4];
+    player* player;
 };
 
-node create_node(uint32_t x, uint32_t y);
+node create_node(uint32_t x, uint32_t y,player* p);
 
 void add(node* root_ptr, node element);
 

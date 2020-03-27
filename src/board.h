@@ -3,15 +3,17 @@
 
 #include "stdint.h"
 #include "stdbool.h"
+#include "stdlib.h"
 
 typedef struct board* board_t;
+
 
 board_t create_board(uint32_t width, uint32_t height,
                      uint32_t players, uint32_t areas);
 
 void delete_board(board_t b);
 
-void add_pawn(board_t b, uint32_t x, uint32_t y);
+void add_pawn(board_t b, uint32_t player, uint32_t x, uint32_t y);
 
 void remove_pawn(board_t b, uint32_t x, uint32_t y);
 
@@ -30,7 +32,7 @@ uint32_t get_number_of_border_fields(board_t b, uint32_t player);
 
 bool check_if_any_neighbour_is_taken_by_player(board_t b, uint32_t player, uint32_t x, uint32_t y);
 
-
+void update_player_areas(board_t b, uint32_t player);
 
 
 #endif //GAMMA_BOARD_H
