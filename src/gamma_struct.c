@@ -1,115 +1,51 @@
 #include "gamma_struct.h"
 
 
-static node* get_neighbours(gamma_t* b, uint32_t x, uint32_t y) {
-    node* neighbours = calloc(4, sizeof(node));
-    if (x < b->height) {
-        neighbours[0] = get(b->node_tree, x + 1, y);
-    }
-    if (y < b->width) {
-        neighbours[1] = get(b->node_tree, x, y + 1);
-    }
-    if (x > 0) {
-        neighbours[2] = get(b->node_tree, x - 1, y);
-    }
-    if (y > 0) {
-        neighbours[3] = get(b->node_tree, x, y - 1);
-    }
-    return neighbours;
-}
-
-
-static node find_root(node n) {
-    node root = n;
-    while (root->parent != root) {
-        root = root->parent;
-    }
-    node tmp = n;
-    node parent;
-    while (tmp->parent != tmp) {
-        parent = tmp->parent;
-        tmp->parent = root;
-        tmp = parent;
-    }
-    return root;
-}
-
-static int merge_neighbours(node n, node new_root) {
-    node tmp;
+static void merge(gamma_t* g, uint32_t x, uint32_t y) {
     int merged_areas = 0;
+    uint32_t neighbour_x;
+    uint32_t neighbour_y;
+    set_funion_parent(g->b,x,y,x,y);
     for (int i = 0; i < 4; i++) {
-        if (n->neighbours[i] != NULL && n->neighbours[i]->player->player_index == n->player->player_index) {
-            tmp = find_root(n->neighbours[i]);
-            if (tmp != new_root) {
-                merged_areas++;
-                n->neighbours[i]->parent = new_root;
-            }
+        neighbour_x = x + (i == 0) - (i == 2);
+        neighbour_y = y + (i == 1) - (i == 3);
+        if(union_operation(g->b,x,y,neighbour_x,neighbour_y)){
+            merged_areas++;
         }
     }
-    return merged_areas;
+    g->players[get_player(g->b,x,y)-1]->areas -= merged_areas;
 }
 
-static node get_random_neighbour(node n) {
-    for (int i = 0; i < 4; i++) {
-        if (n->neighbours[i] != NULL && n->neighbours[i]->player->player_index == n->player->player_index) {
-            return n->neighbours[i];
-        }
-    }
-    return NULL;
-
-}
-
-static void merge(node new_node) {
-    node random_neighbour = get_random_neighbour(new_node);
-    if (random_neighbour == NULL) {
-        new_node->parent = new_node;
-        new_node->player->areas++;
-    } else {
-        node root = find_root(random_neighbour);
-        new_node->parent = root;
-        new_node->player->areas -= merge_neighbours(new_node, root);
-    }
-}
-
-static int number_of_same_color_neighbours(node n) {
-    int number = 0;
-    for (int i = 0; i < 4; i++) {
-        if (n->neighbours[i] != NULL && n->neighbours[i]->player == n->player) {
-            number++;
-        }
-    }
-    return number;
-}
-
-static void update_edges_when_adding(gamma_t* b, uint32_t player, uint32_t x, uint32_t y) {
+static void update_edges_when_adding(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
     int number_of_new_edges = 0;
     bool at_least_one_neighbour = false;
-    node* neighbours = get_neighbours(b, x, y);
-    node n;
+    uint32_t neighbour_x;
+    uint32_t neighbour_y;
+    uint32_t neighbour_player;
     for (int i = 0; i < 4; i++) {
-        if (x + (i == 0) - (i == 2) < 0 || y + (i == 1) - (i == 3) < 0 || x + (i == 0) - (i == 2) >= b->width ||
-            y + (i == 1) - (i == 3) >= b->height) {
+        neighbour_x = x + (i == 0) - (i == 2);
+        neighbour_y = y + (i == 1) - (i == 3);
+        if (neighbour_x < 0 || neighbour_y < 0 || neighbour_x >= g->width ||
+            neighbour_y >= g->height) {
             continue;
         }
-        n = neighbours[i];
-        if (n != NULL) {
-            if (n->player->player_index == player) {
+        neighbour_player = get_player(g->b, neighbour_x, neighbour_y);
+        if (neighbour_player != 0) {
+            if (neighbour_player == player) {
                 at_least_one_neighbour++;
-            } else if (number_of_neighbours_taken_by_player(b, n->player->player_index + 1, x, y) == 1) {
-                n->player->area_edges--;
+            } else if (number_of_neighbours_taken_by_player(g, neighbour_player, x, y) == 1) {
+                g->players[player - 1]->area_edges--;
             }
-        } else if (!number_of_neighbours_taken_by_player(b, player + 1, x + (i == 0) - (i == 2),
-                                                         y + (i == 1) - (i == 3))) {
+        } else if (number_of_neighbours_taken_by_player(g, player, neighbour_x, neighbour_y) == 0 ) {
             number_of_new_edges++;
         }
     }
-    b->players[player]->area_edges += number_of_new_edges - at_least_one_neighbour;
+    g->players[player-1]->area_edges += number_of_new_edges - at_least_one_neighbour;
 }
 
 static void update_edges_when_removing(gamma_t* b, uint32_t player, uint32_t x, uint32_t y) {
     int number_of_new_edges = 0;
     bool at_least_one_neighbour = false;
-    node* neighbours = get_neighbours(b, x, y);
     node n;
     for (int i = 0; i < 4; i++) {
         if (x + (i == 0) - (i == 2) < 0 || y + (i == 1) - (i == 3) < 0 || x + (i == 0) - (i == 2) >= b->width ||
@@ -132,13 +68,14 @@ static void update_edges_when_removing(gamma_t* b, uint32_t player, uint32_t x, 
 }
 //----------PUBLIC FUNCTIONS------------------------
 
-gamma_t* create_board(uint32_t width, uint32_t height,
-                     uint32_t players, uint32_t areas) {
+gamma_t* create_gamma(uint32_t width, uint32_t height,
+                      uint32_t players, uint32_t areas) {
     gamma_t* game = malloc(sizeof(struct gamma));
     game->width = width;
     game->height = height;
     game->number_of_players = players;
     game->max_areas = areas;
+    game->b = create_board(width, height);
     game->players = malloc(players * sizeof(player*));
     for (uint32_t i = 0; i < players; i++) {
         game->players[i] = malloc(sizeof(player));
@@ -151,34 +88,25 @@ gamma_t* create_board(uint32_t width, uint32_t height,
     return game;
 }
 
-void delete_board(gamma_t* b) {
+void delete_gamma(gamma_t* b) {
     free(b);
 }
 
-uint32_t check_field(gamma_t* b, uint32_t x, uint32_t y) {
-    node n = get(b->node_tree, x, y);
-    if (n == NULL) {
-        return 0;
-    }
-    return n->player->player_index + 1;
+uint32_t check_field(gamma_t* g, uint32_t x, uint32_t y) {
+    uint32_t player = get_player(g->b, x, y);
+    return player;
 }
 
 uint32_t get_number_of_players_areas(gamma_t* b, uint32_t player) {
     return b->players[player - 1]->areas;
 }
 
-void add_pawn(gamma_t* b, uint32_t player, uint32_t x, uint32_t y) {
-    node newNode = create_node(x, y, b->players[player - 1]);
+void add_pawn(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
+    set_player(g->b, player, x, y);
+    update_edges_when_adding(g, player, x, y);
 
-    node* neighbours = get_neighbours(b, x, y);
-    set_neighbours(newNode, neighbours);
-    free(neighbours);
-
-    update_edges_when_adding(b, player - 1, x, y);
-
-    merge(newNode);
-    add(&(b->node_tree), newNode);
-    b->players[player - 1]->pawns_number++;
+    merge(g,x,y);
+    g->players[player - 1]->pawns_number++;
 }
 
 static void remove_pawn_from_neighbours(node n, uint32_t x_to_remove, uint32_t y_to_remove) {
@@ -215,11 +143,16 @@ uint64_t get_number_of_players_pawns(gamma_t* b, uint32_t player) {
     return b->players[player - 1]->pawns_number;
 }
 
-int number_of_neighbours_taken_by_player(gamma_t* b, uint32_t player, uint32_t x, uint32_t y) {
-    node* neighbours = get_neighbours(b, x, y);
+int number_of_neighbours_taken_by_player(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
+    uint32_t neighbour_x;
+    uint32_t neighbour_y;
+    uint32_t neighbour_player;
     int n = 0;
     for (int i = 0; i < 4; i++) {
-        if (neighbours[i] != NULL && neighbours[i]->player->player_index == player - 1) {
+        neighbour_x = x + (i == 0) - (i == 2);
+        neighbour_y = y + (i == 1) - (i == 3);
+        neighbour_player = get_player(g->b,neighbour_x,neighbour_y);
+        if (neighbour_player != 0 && neighbour_player == player) {
             n++;
         }
     }
@@ -276,11 +209,11 @@ uint64_t get_number_of_players_area_edges(gamma_t* b, uint32_t player) {
 }
 
 void fill_board(node n, char** buffer) {
-    if(!n)
+    if (!n)
         return;
     buffer[n->y][n->x] = n->player->player_index + 1 + '0';
-    fill_board(n->left,buffer);
-    fill_board(n->right,buffer);
+    fill_board(n->left, buffer);
+    fill_board(n->right, buffer);
 }
 
 char* print_board(gamma_t* b) {
@@ -297,10 +230,10 @@ char* print_board(gamma_t* b) {
     uint64_t length = (b->height * (b->width + 1) + 1) * sizeof(char);
     char* string = malloc(length);
     for (uint64_t i = 0; i < b->height; i++) {
-        for (uint64_t j = 0; j < b->width+1; j++) {
-            string[i*(b->width+1) + j] = board[b->height - 1 -i][j];
+        for (uint64_t j = 0; j < b->width + 1; j++) {
+            string[i * (b->width + 1) + j] = board[b->height - 1 - i][j];
         }
     }
-    string[length-1] = '\0';
+    string[length - 1] = '\0';
     return string;
 }

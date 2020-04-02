@@ -7,6 +7,7 @@
 #include "player.h"
 #include "node.h"
 
+#include "board.h"
 // Lower level gamma interface
 typedef struct gamma gamma_t;
 
@@ -16,13 +17,13 @@ struct gamma {
     uint32_t number_of_players;
     uint32_t max_areas;
     player** players;
-    node node_tree;
+    board_t b;
 };
 
-gamma_t* create_board(uint32_t width, uint32_t height,
-                     uint32_t players, uint32_t areas);
+gamma_t* create_gamma(uint32_t width, uint32_t height,
+                      uint32_t players, uint32_t areas);
 
-void delete_board(gamma_t* b);
+void delete_gamma(gamma_t* b);
 
 void add_pawn(gamma_t* b, uint32_t player, uint32_t x, uint32_t y);
 

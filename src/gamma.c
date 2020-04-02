@@ -25,12 +25,12 @@ gamma_t* gamma_new(uint32_t width, uint32_t height,
     if (!areParametersForNewGameValid(width, height, players)) {
         return NULL;
     }
-    return create_board(width,height,players,areas);
+    return create_gamma(width, height, players, areas);
 }
 
 void gamma_delete(gamma_t* g) {
     if (g != NULL) {
-        delete_board(g);
+        delete_gamma(g);
     }
 }
 
@@ -133,5 +133,5 @@ uint64_t gamma_free_fields(gamma_t* g, uint32_t player) {
 }
 
 char* gamma_board(gamma_t* g){
-    return print_board(g);
+//    return print_board(g);
 }
