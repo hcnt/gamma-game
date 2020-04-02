@@ -36,7 +36,7 @@ bool is_bigger(node a, uint32_t x, uint32_t y) {
     }
 }
 
-node find(node root, uint32_t x, uint32_t y) {
+node get(node root, uint32_t x, uint32_t y) {
     if (root == NULL) {
         return NULL;
     }
@@ -44,9 +44,9 @@ node find(node root, uint32_t x, uint32_t y) {
         return root;
     }
     if (is_bigger(root, x, y)) {
-        return find(root->left, x, y);
+        return get(root->left, x, y);
     }
-    return find(root->right, x, y);
+    return get(root->right, x, y);
 }
 
 void add(node* root_ptr, node element) {

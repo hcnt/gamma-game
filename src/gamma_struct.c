@@ -4,16 +4,16 @@
 static node* get_neighbours(gamma_t* b, uint32_t x, uint32_t y) {
     node* neighbours = calloc(4, sizeof(node));
     if (x < b->height) {
-        neighbours[0] = find(b->node_tree, x + 1, y);
+        neighbours[0] = get(b->node_tree, x + 1, y);
     }
     if (y < b->width) {
-        neighbours[1] = find(b->node_tree, x, y + 1);
+        neighbours[1] = get(b->node_tree, x, y + 1);
     }
     if (x > 0) {
-        neighbours[2] = find(b->node_tree, x - 1, y);
+        neighbours[2] = get(b->node_tree, x - 1, y);
     }
     if (y > 0) {
-        neighbours[3] = find(b->node_tree, x, y - 1);
+        neighbours[3] = get(b->node_tree, x, y - 1);
     }
     return neighbours;
 }
@@ -156,7 +156,7 @@ void delete_board(gamma_t* b) {
 }
 
 uint32_t check_field(gamma_t* b, uint32_t x, uint32_t y) {
-    node n = find(b->node_tree, x, y);
+    node n = get(b->node_tree, x, y);
     if (n == NULL) {
         return 0;
     }
@@ -192,7 +192,7 @@ static void remove_pawn_from_neighbours(node n, uint32_t x_to_remove, uint32_t y
 
 void remove_pawn(gamma_t* b, uint32_t x, uint32_t y) {
     node* neighbours = get_neighbours(b, x, y);
-    uint32_t player = find(b->node_tree, x, y)->player->player_index;
+    uint32_t player = get(b->node_tree, x, y)->player->player_index;
     for (int i = 0; i < 4; i++) {
         if (neighbours[i] != NULL) {
             remove_pawn_from_neighbours(neighbours[i], x, y);

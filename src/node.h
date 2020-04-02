@@ -20,7 +20,7 @@ void set_neighbours(node n, node* neighbours);
 
 void add(node* root_ptr, node element);
 
-node find(node root, uint32_t x, uint32_t y);
+node get(node root, uint32_t x, uint32_t y);
 
 bool is_bigger(node a, uint32_t x, uint32_t y);
 

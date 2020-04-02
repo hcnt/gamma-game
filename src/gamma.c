@@ -79,7 +79,7 @@ bool gamma_golden_move(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
     }
     //----------------------
 
-    node node_to_remove = find(g->node_tree,x,y);
+    node node_to_remove = get(g->node_tree, x, y);
     if(node_to_remove == NULL || node_to_remove->player->player_index == player-1){
         return false;
     }
