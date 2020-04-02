@@ -20,7 +20,7 @@
 /**
  * Tak ma wyglądać plansza po wykonaniu wszystkich testów.
  */
-static const char board[] =
+static const char gamma[] =
         "1.........\n"
         "..........\n"
         "..........\n"
@@ -89,7 +89,7 @@ int main() {
 
     char* p = gamma_board(g);
     assert(p);
-    assert(strcmp(p, board) == 0);
+    assert(strcmp(p, gamma) == 0);
     free(p);
 
     gamma_delete(g);

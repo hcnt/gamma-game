@@ -1,7 +1,7 @@
-#include "board.h"
+#include "gamma_struct.h"
 
 
-static node* get_neighbours(board_t b, uint32_t x, uint32_t y) {
+static node* get_neighbours(gamma_t* b, uint32_t x, uint32_t y) {
     node* neighbours = calloc(4, sizeof(node));
     if (x < b->height) {
         neighbours[0] = find(b->node_tree, x + 1, y);
@@ -81,7 +81,7 @@ static int number_of_same_color_neighbours(node n) {
     return number;
 }
 
-static void update_edges_when_adding(board_t b, uint32_t player, uint32_t x, uint32_t y) {
+static void update_edges_when_adding(gamma_t* b, uint32_t player, uint32_t x, uint32_t y) {
     int number_of_new_edges = 0;
     bool at_least_one_neighbour = false;
     node* neighbours = get_neighbours(b, x, y);
@@ -106,7 +106,7 @@ static void update_edges_when_adding(board_t b, uint32_t player, uint32_t x, uin
     b->players[player]->area_edges += number_of_new_edges - at_least_one_neighbour;
 }
 
-static void update_edges_when_removing(board_t b, uint32_t player, uint32_t x, uint32_t y) {
+static void update_edges_when_removing(gamma_t* b, uint32_t player, uint32_t x, uint32_t y) {
     int number_of_new_edges = 0;
     bool at_least_one_neighbour = false;
     node* neighbours = get_neighbours(b, x, y);
@@ -132,12 +132,12 @@ static void update_edges_when_removing(board_t b, uint32_t player, uint32_t x, u
 }
 //----------PUBLIC FUNCTIONS------------------------
 
-board_t create_board(uint32_t width, uint32_t height,
+gamma_t* create_board(uint32_t width, uint32_t height,
                      uint32_t players, uint32_t areas) {
-    board_t game = malloc(sizeof(struct board));
+    gamma_t* game = malloc(sizeof(struct gamma));
     game->width = width;
     game->height = height;
-    game->players_number = players;
+    game->number_of_players = players;
     game->max_areas = areas;
     game->players = malloc(players * sizeof(player*));
     for (uint32_t i = 0; i < players; i++) {
@@ -151,11 +151,11 @@ board_t create_board(uint32_t width, uint32_t height,
     return game;
 }
 
-void delete_board(board_t b) {
+void delete_board(gamma_t* b) {
     free(b);
 }
 
-uint32_t check_field(board_t b, uint32_t x, uint32_t y) {
+uint32_t check_field(gamma_t* b, uint32_t x, uint32_t y) {
     node n = find(b->node_tree, x, y);
     if (n == NULL) {
         return 0;
@@ -163,11 +163,11 @@ uint32_t check_field(board_t b, uint32_t x, uint32_t y) {
     return n->player->player_index + 1;
 }
 
-uint32_t get_number_of_players_areas(board_t b, uint32_t player) {
+uint32_t get_number_of_players_areas(gamma_t* b, uint32_t player) {
     return b->players[player - 1]->areas;
 }
 
-void add_pawn(board_t b, uint32_t player, uint32_t x, uint32_t y) {
+void add_pawn(gamma_t* b, uint32_t player, uint32_t x, uint32_t y) {
     node newNode = create_node(x, y, b->players[player - 1]);
 
     node* neighbours = get_neighbours(b, x, y);
@@ -190,7 +190,7 @@ static void remove_pawn_from_neighbours(node n, uint32_t x_to_remove, uint32_t y
     }
 }
 
-void remove_pawn(board_t b, uint32_t x, uint32_t y) {
+void remove_pawn(gamma_t* b, uint32_t x, uint32_t y) {
     node* neighbours = get_neighbours(b, x, y);
     uint32_t player = find(b->node_tree, x, y)->player->player_index;
     for (int i = 0; i < 4; i++) {
@@ -203,19 +203,19 @@ void remove_pawn(board_t b, uint32_t x, uint32_t y) {
     b->players[player]->pawns_number--;
 }
 
-uint64_t get_number_of_pawns(board_t b) {
+uint64_t get_number_of_pawns(gamma_t* b) {
     uint64_t sum = 0;
-    for (uint32_t i = 0; i < b->players_number; i++) {
+    for (uint32_t i = 0; i < b->number_of_players; i++) {
         sum += b->players[i]->pawns_number;
     }
     return sum;
 }
 
-uint64_t get_number_of_players_pawns(board_t b, uint32_t player) {
+uint64_t get_number_of_players_pawns(gamma_t* b, uint32_t player) {
     return b->players[player - 1]->pawns_number;
 }
 
-int number_of_neighbours_taken_by_player(board_t b, uint32_t player, uint32_t x, uint32_t y) {
+int number_of_neighbours_taken_by_player(gamma_t* b, uint32_t player, uint32_t x, uint32_t y) {
     node* neighbours = get_neighbours(b, x, y);
     int n = 0;
     for (int i = 0; i < 4; i++) {
@@ -226,8 +226,8 @@ int number_of_neighbours_taken_by_player(board_t b, uint32_t player, uint32_t x,
     return n;
 }
 
-void reset_areas(board_t b) {
-    for (uint32_t i = 0; i < b->players_number; i++) {
+void reset_areas(gamma_t* b) {
+    for (uint32_t i = 0; i < b->number_of_players; i++) {
         b->players[i]->areas = 0;
     }
 }
@@ -264,14 +264,14 @@ static void traverse_and_update_area(node n) {
     traverse_and_update_area(n->right);
 }
 
-void update_areas(board_t b) {
+void update_areas(gamma_t* b) {
     reset_areas(b);
     traverse_and_update_area(b->node_tree);
     reset_visited(b->node_tree);
 }
 
 
-uint64_t get_number_of_players_area_edges(board_t b, uint32_t player) {
+uint64_t get_number_of_players_area_edges(gamma_t* b, uint32_t player) {
     return b->players[player - 1]->area_edges;
 }
 
@@ -283,8 +283,7 @@ void fill_board(node n, char** buffer) {
     fill_board(n->right,buffer);
 }
 
-#include <stdio.h>
-char* print_board(board_t b) {
+char* print_board(gamma_t* b) {
     char** board = malloc(b->height * sizeof(char*));
     for (uint64_t i = 0; i < b->height; i++) {
         board[i] = malloc((b->width + 1) * sizeof(char));
@@ -300,11 +299,8 @@ char* print_board(board_t b) {
     for (uint64_t i = 0; i < b->height; i++) {
         for (uint64_t j = 0; j < b->width+1; j++) {
             string[i*(b->width+1) + j] = board[b->height - 1 -i][j];
-//            printf("%d ", string[i*b->height + j]);
         }
     }
-    printf("%s",string);
-    printf("\n");
     string[length-1] = '\0';
     return string;
 }
