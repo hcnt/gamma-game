@@ -24,7 +24,6 @@ set(SOURCE_FILES
         src/gamma.c
         src/gamma.h
         src/gamma_test.c
-        src/node.c
         src/player.h src/gamma_struct.h src/gamma_struct.c src/gamma_test2.c src/board.c)
 
 # Wskazujemy plik wykonywalny.

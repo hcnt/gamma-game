@@ -5,7 +5,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include "player.h"
-#include "node.h"
 
 #include "board.h"
 // Lower level gamma interface

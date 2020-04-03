@@ -1,6 +1,5 @@
 #include "gamma.h"
 #include "stdlib.h"
-#include "node.h"
 #include "player.h"
 #include "gamma_struct.h"
 
