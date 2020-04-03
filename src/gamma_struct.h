@@ -46,7 +46,7 @@ int number_of_neighbours_taken_by_player(gamma_t* b, uint32_t player, uint32_t x
 
 void update_areas(gamma_t* b);
 
-char* print_board(gamma_t* b);
+char* print_board(gamma_t* g);
 
 
 #endif //GAMMA_GAMMA_H

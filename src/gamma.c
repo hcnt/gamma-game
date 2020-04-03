@@ -79,22 +79,17 @@ bool gamma_golden_move(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
     }
     //----------------------
 
-    node node_to_remove = get(g->node_tree, x, y);
-    if(node_to_remove == NULL || node_to_remove->player->player_index == player-1){
+    uint32_t player_to_remove = get_player(g->b,x,y);
+    if (player_to_remove == player){
         return false;
     }
-    uint32_t player_to_remove_index = node_to_remove->player->player_index;
     remove_pawn(g, x, y);
-    update_areas(g);
-    if (get_number_of_players_areas(g, player_to_remove_index+1) > g->max_areas) {
-        add_pawn(g, player_to_remove_index+1, x, y);
-        return false;
-    }
     add_pawn(g, player, x, y);
-    if (get_number_of_players_areas(g, player) > g->max_areas) {
+    update_areas(g);
+    if (get_number_of_players_areas(g, player) > g->max_areas || get_number_of_players_areas(g, player_to_remove) > g->max_areas) {
         remove_pawn(g, x, y);
+        add_pawn(g, player_to_remove, x, y);
         update_areas(g);
-        add_pawn(g, player_to_remove_index+1, x, y);
         return false;
     }
     return true;
@@ -133,5 +128,5 @@ uint64_t gamma_free_fields(gamma_t* g, uint32_t player) {
 }
 
 char* gamma_board(gamma_t* g){
-//    return print_board(g);
+    return print_board(g);
 }

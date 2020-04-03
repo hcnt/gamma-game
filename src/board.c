@@ -8,9 +8,10 @@ board_t create_board(uint32_t width, uint32_t height) {
     board_t board = malloc(sizeof(struct board));
     board->width = width;
     board->height = height;
-    board->players = calloc(height * width, sizeof(uint64_t));
-    board->dfs_visited = calloc(height * width, sizeof(bool));
-    board->funion_parent = calloc(height * width, sizeof(uint64_t));
+    uint64_t array_length = height * width;
+    board->players = calloc(array_length, sizeof(uint64_t));
+    board->dfs_visited = calloc(array_length, sizeof(bool));
+    board->funion_parent = calloc(array_length, sizeof(uint64_t));
     return board;
 }
 
