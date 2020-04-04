@@ -7,6 +7,7 @@
 #include "player.h"
 
 #include "board.h"
+
 // Lower level gamma interface
 typedef struct gamma gamma_t;
 

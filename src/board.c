@@ -23,7 +23,7 @@ void delete_board(board_t b) {
 }
 
 uint64_t get_player(board_t b, uint32_t x, uint32_t y) {
-    if(b->height * y + x < 0 || b->height * y + x >= b->height * b->width){
+    if (b->height * y + x < 0 || b->height * y + x >= b->height * b->width) {
         return 0;
     }
     return b->players[b->height * y + x];

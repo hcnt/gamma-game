@@ -92,8 +92,9 @@ gamma_t* create_gamma(uint32_t width, uint32_t height,
     return game;
 }
 
-void delete_gamma(gamma_t* b) {
-    free(b);
+void delete_gamma(gamma_t* g) {
+    delete_board(g->b);
+    free(g);
 }
 
 uint32_t check_field(gamma_t* g, uint32_t x, uint32_t y) {
@@ -207,8 +208,8 @@ void fill_board(board_t b, char** buffer) {
     uint32_t player;
     for (int i = 0; i < b->width; i++) {
         for (int j = 0; j < b->height; j++) {
-            player = get_player(b,i,j);
-            if(player != 0) {
+            player = get_player(b, i, j);
+            if (player != 0) {
                 buffer[j][i] = player + '0';
             }
         }
