@@ -92,6 +92,7 @@ bool gamma_golden_move(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
         update_areas(g);
         return false;
     }
+    g->players[player-1]->golden_move_available = false;
     return true;
 }
 
@@ -109,7 +110,7 @@ bool gamma_golden_possible(gamma_t* g, uint32_t player) {
     if (player > g->number_of_players || player == 0) {
         return false;
     }
-    if (!g->players[player - 1]->golden_move_available) return false;
+    if (!(g->players[player - 1]->golden_move_available)) return false;
     if (get_number_of_pawns(g) - get_number_of_players_pawns(g, player) == 0) {
         return false;
     }

@@ -94,7 +94,7 @@ gamma_t* create_gamma(uint32_t width, uint32_t height,
 
 void delete_gamma(gamma_t* g) {
     delete_board(g->b);
-    for(int i =0; i< g->number_of_players; i++){
+    for(uint32_t i =0; i< g->number_of_players; i++){
        free(g->players[i]);
     }
     free(g->players);
