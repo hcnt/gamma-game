@@ -79,7 +79,7 @@ bool gamma_golden_move(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
     //----------------------
 
     uint32_t player_to_remove = get_player(g->b, x, y);
-    if (player_to_remove == player) {
+    if (player_to_remove == player || player_to_remove == 0) {
         return false;
     }
     remove_pawn(g, x, y);
@@ -113,6 +113,7 @@ bool gamma_golden_possible(gamma_t* g, uint32_t player) {
     if (get_number_of_pawns(g) - get_number_of_players_pawns(g, player) == 0) {
         return false;
     }
+    return true;
 }
 
 uint64_t gamma_free_fields(gamma_t* g, uint32_t player) {

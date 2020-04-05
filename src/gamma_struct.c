@@ -10,7 +10,8 @@ static void get_neighbours(board_t b, uint32_t x, uint32_t y,
     uint32_t neighbour_y;
 
     for (int i = 0; i < 4; i++) {
-        if ((x == 0 && i == 2) || (x == b->width - 1 && i == 0) || (y == 0 && i == 3) || (y == b->height - 1 && i == 1)) {
+        if ((x == 0 && i == 2) || (x == b->width - 1 && i == 0) || (y == 0 && i == 3) ||
+            (y == b->height - 1 && i == 1)) {
             neighbour_exists[i] = false;
         } else {
             neighbour_exists[i] = true;
@@ -53,7 +54,7 @@ static void update_edges(gamma_t* g, uint32_t player, uint32_t x, uint32_t y, bo
 
     get_neighbours(g->b, x, y, neighbours_x, neighbours_y, neighbours_player, neighbours_exists);
     for (int i = 0; i < 4; i++) {
-        if(!neighbours_exists[i]){
+        if (!neighbours_exists[i]) {
             continue;
         }
         if (neighbours_player[i] != 0) {
@@ -93,6 +94,10 @@ gamma_t* create_gamma(uint32_t width, uint32_t height,
 
 void delete_gamma(gamma_t* g) {
     delete_board(g->b);
+    for(int i =0; i< g->number_of_players; i++){
+       free(g->players[i]);
+    }
+    free(g->players);
     free(g);
 }
 
@@ -107,14 +112,14 @@ uint32_t get_number_of_players_areas(gamma_t* b, uint32_t player) {
 
 void add_pawn(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
     set_player(g->b, player, x, y);
-    update_edges(g, player, x, y,true);
+    update_edges(g, player, x, y, true);
     merge(g, x, y);
     g->players[player - 1]->pawns_number++;
 }
 
 void remove_pawn(gamma_t* g, uint32_t x, uint32_t y) {
     uint32_t player = get_player(g->b, x, y);
-    update_edges(g, player, x, y,false);
+    update_edges(g, player, x, y, false);
     g->players[player - 1]->pawns_number--;
     set_player(g->b, 0, x, y);
 }
@@ -176,7 +181,8 @@ void update_areas_dfs(board_t b, uint32_t x, uint32_t y, uint32_t new_root_x, ui
 
     get_neighbours(b, x, y, neighbours_x, neighbours_y, neighbours_player, neighbours_exists);
     for (int i = 0; i < 4; i++) {
-        if (get_player(b, x, y) == neighbours_player[i]) {
+        if (neighbours_exists[i] && get_player(b, x, y) == neighbours_player[i] &&
+            !get_dfs_visited(b, neighbours_x[i], neighbours_y[i])) {
             update_areas_dfs(b, neighbours_x[i], neighbours_y[i], new_root_x, new_root_y);
         }
     }
