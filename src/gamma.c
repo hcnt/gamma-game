@@ -43,10 +43,10 @@ static bool are_gamma_move_parameters_valid(gamma_t* g, uint32_t player, uint32_
     if (player == 0) {
         return false;
     }
-    if (x > g->width) {
+    if (x >= g->width) {
         return false;
     }
-    if (y > g->height) {
+    if (y >= g->height) {
         return false;
     }
     return true;
@@ -76,10 +76,19 @@ bool gamma_golden_move(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
     if (!g->players[player - 1]->golden_move_available) {
         return false;
     }
+    if (x >= g->width) {
+        return false;
+    }
+    if (y >= g->height) {
+        return false;
+    }
     //----------------------
 
     uint32_t player_to_remove = get_player(g->b, x, y);
     if (player_to_remove == player || player_to_remove == 0) {
+        return false;
+    }
+    if(g->players[player-1]->areas == g->max_areas && number_of_neighbours_taken_by_player(g,player,x,y) == 0){
         return false;
     }
     remove_pawn(g, x, y);

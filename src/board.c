@@ -23,30 +23,30 @@ void delete_board(board_t b) {
 }
 
 uint64_t get_player(board_t b, uint32_t x, uint32_t y) {
-    if (b->height * y + x >= b->height * b->width) {
+    if (b->width * y + x >= b->height * b->width) {
         return 0;
     }
-    return b->players[b->height * y + x];
+    return b->players[b->width * y + x];
 }
 
 bool get_dfs_visited(board_t b, uint32_t x, uint32_t y) {
-    return b->dfs_visited[b->height * y + x];
+    return b->dfs_visited[b->width * y + x];
 }
 
 uint64_t get_funion_parent(board_t b, uint32_t x, uint32_t y) {
-    return b->funion_parent[b->height * y + x];
+    return b->funion_parent[b->width * y + x];
 }
 
 void set_player(board_t b, uint64_t player, uint32_t x, uint32_t y) {
-    b->players[b->height * y + x] = player;
+    b->players[b->width * y + x] = player;
 }
 
 void set_dfs_visited(board_t b, bool dfs_visited, uint32_t x, uint32_t y) {
-    b->dfs_visited[b->height * y + x] = dfs_visited;
+    b->dfs_visited[b->width * y + x] = dfs_visited;
 }
 
 void set_funion_parent(board_t b, uint32_t funion_parent_x, uint32_t funion_parent_y, uint32_t x, uint32_t y) {
-    b->funion_parent[b->height * y + x] = b->height * funion_parent_y + funion_parent_x;
+    b->funion_parent[b->width * y + x] = b->width * funion_parent_y + funion_parent_x;
 }
 //--------FUNION FUNCTIONS --------------
 
@@ -69,13 +69,13 @@ bool union_operation(board_t b, uint32_t x1, uint32_t y1, uint32_t x2, __uint32_
     if (get_player(b, x1, y1) == 0 || get_player(b, x2, y2) == 0) {
         return false;
     }
-    uint64_t index_1 = b->height * y1 + x1;
-    uint64_t index_2 = b->height * y2 + x2;
+    uint64_t index_1 = b->width * y1 + x1;
+    uint64_t index_2 = b->width * y2 + x2;
     uint64_t root1 = find_root(b, index_1);
     uint64_t root2 = find_root(b, index_2);
     if (root1 == root2) {
         return false;
     }
-    b->funion_parent[index_1] = root2;
+    b->funion_parent[root1] = root2;
     return true;
 }

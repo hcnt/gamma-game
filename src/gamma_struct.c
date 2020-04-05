@@ -36,7 +36,7 @@ static void merge(gamma_t* g, uint32_t x, uint32_t y) {
     set_funion_parent(g->b, x, y, x, y);
     for (int i = 0; i < 4; i++) {
         if (neighbours_exists[i] && neighbours_player[i] == get_player(g->b, x, y) &&
-            union_operation(g->b, x, y, neighbours_x[i], neighbours_y[i])) {
+            union_operation(g->b, neighbours_x[i], neighbours_y[i],x,y)) {
             merged_areas++;
         }
     }
@@ -53,18 +53,23 @@ static void update_edges(gamma_t* g, uint32_t player, uint32_t x, uint32_t y, bo
     bool neighbours_exists[4];
 
     get_neighbours(g->b, x, y, neighbours_x, neighbours_y, neighbours_player, neighbours_exists);
+    bool flag = true;
     for (int i = 0; i < 4; i++) {
-        if (!neighbours_exists[i]) {
+        if (!neighbours_exists[i])
             continue;
-        }
-        if (neighbours_player[i] != 0) {
-            if (neighbours_player[i] == player) {
-                at_least_one_neighbour = true;
-            } else if (number_of_neighbours_taken_by_player(g, neighbours_player[i], x, y) == 1) {
-                g->players[neighbours_player[i] - 1]->area_edges -= sign;
+
+        if (neighbours_player[i] == 0) {
+            if (number_of_neighbours_taken_by_player(g, player, neighbours_x[i], neighbours_y[i]) == 1) {
+                number_of_new_edges++;
             }
-        } else if (number_of_neighbours_taken_by_player(g, player, neighbours_x[i], neighbours_y[i]) == 1) {
-            number_of_new_edges++;
+        } else {
+            for (int j = 0; j < i; j++) {
+                if (neighbours_exists[j] && neighbours_player[i] == neighbours_player[j]) {
+                    flag = false;
+                }
+            }
+            g->players[neighbours_player[i] - 1]->area_edges -= flag * sign;
+            flag = true;
         }
     }
     g->players[player - 1]->area_edges += sign * number_of_new_edges;
@@ -94,8 +99,8 @@ gamma_t* create_gamma(uint32_t width, uint32_t height,
 
 void delete_gamma(gamma_t* g) {
     delete_board(g->b);
-    for(uint32_t i =0; i< g->number_of_players; i++){
-       free(g->players[i]);
+    for (uint32_t i = 0; i < g->number_of_players; i++) {
+        free(g->players[i]);
     }
     free(g->players);
     free(g);

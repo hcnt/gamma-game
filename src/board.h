@@ -1,11 +1,14 @@
 typedef struct board* board_t;
 
+#include <stdint.h>
+#include "stdbool.h"
+
 struct board {
     uint32_t width;
     uint32_t height;
-    uint64_t* players;
+    uint32_t* players;
     bool* dfs_visited;
-    uint64_t* funion_parent;
+    uint32_t* funion_parent;
 };
 
 bool union_operation(board_t b, uint32_t x1, uint32_t y1, uint32_t x2, __uint32_t y2);
