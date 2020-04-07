@@ -16,15 +16,19 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_C_FLAGS "-std=c11 -Wall -Wextra")
 # Domyślne opcje dla wariantów Release i Debug są sensowne.
 # Jeśli to konieczne, ustawiamy tu inne.
-# set(CMAKE_C_FLAGS_RELEASE "-O3 -std=c11 -Wall -Wextra")
-# set(CMAKE_C_FLAGS_DEBUG "-g")
+set(CMAKE_C_FLAGS_RELEASE "-O3 -std=c11 -Wall -Wextra")
+set(CMAKE_C_FLAGS_DEBUG "-g")
 
 # Wskazujemy pliki źródłowe.
 set(SOURCE_FILES
         src/gamma.c
         src/gamma.h
         src/gamma_test.c
-        src/player.h src/gamma_struct.h src/gamma_struct.c src/gamma_test2.c src/board.c)
+        src/player.h
+        src/gamma_struct.h
+        src/gamma_struct.c
+        src/gamma_test2.c
+        src/board.c)
 
 # Wskazujemy plik wykonywalny.
 add_executable(gamma ${SOURCE_FILES})

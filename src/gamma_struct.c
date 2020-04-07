@@ -33,10 +33,9 @@ static void merge(gamma_t* g, uint32_t x, uint32_t y) {
     bool neighbours_exists[4];
 
     get_neighbours(g->b, x, y, neighbours_x, neighbours_y, neighbours_player, neighbours_exists);
-    set_funion_parent(g->b, x, y, x, y);
     for (int i = 0; i < 4; i++) {
         if (neighbours_exists[i] && neighbours_player[i] == get_player(g->b, x, y) &&
-            union_operation(g->b, neighbours_x[i], neighbours_y[i],x,y)) {
+            union_operation(g->b, neighbours_x[i], neighbours_y[i], x, y)) {
             merged_areas++;
         }
     }
@@ -63,6 +62,7 @@ static void update_edges(gamma_t* g, uint32_t player, uint32_t x, uint32_t y, bo
                 number_of_new_edges++;
             }
         } else {
+            //check if this edge was already added/removed from player
             for (int j = 0; j < i; j++) {
                 if (neighbours_exists[j] && neighbours_player[i] == neighbours_player[j]) {
                     flag = false;
@@ -106,7 +106,7 @@ void delete_gamma(gamma_t* g) {
     free(g);
 }
 
-uint32_t check_field(gamma_t* g, uint32_t x, uint32_t y) {
+uint32_t check_field_player(gamma_t* g, uint32_t x, uint32_t y) {
     uint32_t player = get_player(g->b, x, y);
     return player;
 }
@@ -115,8 +115,25 @@ uint32_t get_number_of_players_areas(gamma_t* b, uint32_t player) {
     return b->players[player - 1]->areas;
 }
 
+uint64_t get_number_of_players_pawns(gamma_t* b, uint32_t player) {
+    return b->players[player - 1]->pawns_number;
+}
+
+uint64_t get_number_of_players_area_edges(gamma_t* b, uint32_t player) {
+    return b->players[player - 1]->area_edges;
+}
+
+uint64_t get_number_of_pawns(gamma_t* g) {
+    uint64_t sum = 0;
+    for (uint32_t i = 0; i < g->number_of_players; i++) {
+        sum += g->players[i]->pawns_number;
+    }
+    return sum;
+}
+
 void add_pawn(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
     set_player(g->b, player, x, y);
+    set_funion_parent(g->b, x, y, x, y);
     update_edges(g, player, x, y, true);
     merge(g, x, y);
     g->players[player - 1]->pawns_number++;
@@ -127,18 +144,6 @@ void remove_pawn(gamma_t* g, uint32_t x, uint32_t y) {
     update_edges(g, player, x, y, false);
     g->players[player - 1]->pawns_number--;
     set_player(g->b, 0, x, y);
-}
-
-uint64_t get_number_of_pawns(gamma_t* b) {
-    uint64_t sum = 0;
-    for (uint32_t i = 0; i < b->number_of_players; i++) {
-        sum += b->players[i]->pawns_number;
-    }
-    return sum;
-}
-
-uint64_t get_number_of_players_pawns(gamma_t* b, uint32_t player) {
-    return b->players[player - 1]->pawns_number;
 }
 
 int number_of_neighbours_taken_by_player(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
@@ -157,21 +162,23 @@ int number_of_neighbours_taken_by_player(gamma_t* g, uint32_t player, uint32_t x
     return n;
 }
 
-void reset_areas(gamma_t* b) {
+//------------DFS AND UPDATING AREAS---------------------
+
+static void reset_areas(gamma_t* b) {
     for (uint32_t i = 0; i < b->number_of_players; i++) {
         b->players[i]->areas = 0;
     }
 }
 
-void reset_visited(board_t b) {
-    for (uint32_t i = 0; i < b->height; i++) {
-        for (uint32_t j = 0; j < b->width; j++) {
+static void reset_dfs_visited_flag(board_t b) {
+    for (uint32_t i = 0; i < b->width; i++) {
+        for (uint32_t j = 0; j < b->height; j++) {
             set_dfs_visited(b, false, i, j);
         }
     }
 }
 
-void update_areas_dfs(board_t b, uint32_t x, uint32_t y, uint32_t new_root_x, uint32_t new_root_y) {
+static void update_areas_dfs(board_t b, uint32_t x, uint32_t y, uint32_t new_root_x, uint32_t new_root_y) {
     if (get_player(b, x, y) == 0)
         return;
     if (get_dfs_visited(b, x, y))
@@ -194,10 +201,12 @@ void update_areas_dfs(board_t b, uint32_t x, uint32_t y, uint32_t new_root_x, ui
 }
 
 static void traverse_and_update_area(gamma_t* g) {
+    uint32_t player;
     for (uint32_t i = 0; i < g->b->width; i++) {
         for (uint32_t j = 0; j < g->b->height; j++) {
-            if (get_player(g->b, i, j) != 0 && !get_dfs_visited(g->b, i, j)) {
-                g->players[get_player(g->b, i, j) - 1]->areas++;
+            player = get_player(g->b, i, j);
+            if (player != 0 && !get_dfs_visited(g->b, i, j)) {
+                g->players[player - 1]->areas++;
                 update_areas_dfs(g->b, i, j, i, j);
             }
         }
@@ -205,47 +214,43 @@ static void traverse_and_update_area(gamma_t* g) {
 }
 
 void update_areas(gamma_t* g) {
+    //set all areas to 0
     reset_areas(g);
+
+    //increment area counters by DFS pass through the board
     traverse_and_update_area(g);
-    reset_visited(g->b);
+
+    reset_dfs_visited_flag(g->b);
 }
 
+//------------PRINTING-------------------------------------
 
-uint64_t get_number_of_players_area_edges(gamma_t* b, uint32_t player) {
-    return b->players[player - 1]->area_edges;
+static void fill_cell(board_t b, char* buffer, int x, int y) {
+    uint32_t player = get_player(b, x, b->height - y - 1);
+    if (player != 0) {
+        buffer[y * (b->width + 1) + x] = (char) (player + '0');
+    } else {
+        buffer[y * (b->width + 1) + x] = '.';
+    }
 }
 
-void fill_board(board_t b, char** buffer) {
-    uint32_t player;
-    for (uint32_t i = 0; i < b->width; i++) {
-        for (uint32_t j = 0; j < b->height; j++) {
-            player = get_player(b, i, j);
-            if (player != 0) {
-                buffer[j][i] = (char) (player + '0');
-            }
+static void fill_board(board_t b, char* buffer) {
+    for (uint32_t i = 0; i < b->height; i++) {
+        for (uint32_t j = 0; j < b->width; j++) {
+            fill_cell(b, buffer, j, i);
         }
+        buffer[i * (b->width + 1) + b->height] = '\n';
     }
 
 }
 
 char* print_board(gamma_t* g) {
-    char** board = malloc(g->height * sizeof(char*));
-    for (uint64_t i = 0; i < g->height; i++) {
-        board[i] = malloc((g->width + 1) * sizeof(char));
-        for (uint64_t j = 0; j < g->width; j++) {
-            board[i][j] = '.';
-        }
-        board[i][g->width] = '\n';
-    }
-    fill_board(g->b, board);
 
     uint64_t length = (g->height * (g->width + 1) + 1) * sizeof(char);
-    char* string = malloc(length);
-    for (uint64_t i = 0; i < g->height; i++) {
-        for (uint64_t j = 0; j < g->width + 1; j++) {
-            string[i * (g->width + 1) + j] = board[g->height - 1 - i][j];
-        }
-    }
-    string[length - 1] = '\0';
-    return string;
+    char* board = malloc(length);
+
+    fill_board(g->b, board);
+
+    board[length - 1] = '\0';
+    return board;
 }
