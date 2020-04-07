@@ -46,3 +46,25 @@ if (DOXYGEN_FOUND)
             COMMENT "Generating API documentation with Doxygen"
             )
 endif (DOXYGEN_FOUND)
+
+
+enable_testing()
+file(GLOB files "tests/z2/*/*.c")
+
+set(CTEST_PARALLEL_LEVEL 4)
+set(SOURCE_FILES_TESTING
+        ./src/gamma.c
+        ./src/gamma.h
+        ./src/player.h
+        ./src/gamma_struct.h
+        ./src/gamma_struct.c
+        ./src/board.c)
+set(memcheck_command "valgrind")
+set(memcheck_args "--leak-check=full")
+
+add_library(source OBJECT ${SOURCE_FILES_TESTING})
+foreach (file ${files})
+    string(REGEX REPLACE "(^.*/|\\.[^.]*$)" "" file_without_ext ${file})
+    add_executable(${file_without_ext} $<TARGET_OBJECTS:source> ${file})
+    add_test(${file_without_ext} ${memcheck_command} ${memcheck_args} ./${file_without_ext})
+endforeach ()

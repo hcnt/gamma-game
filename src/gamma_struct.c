@@ -1,5 +1,13 @@
 #include "gamma_struct.h"
 
+struct gamma {
+    uint32_t width;
+    uint32_t height;
+    uint32_t number_of_players;
+    uint32_t max_areas;
+    player** players; ///< array to store information about every player
+    board_t b; ///< board with implemented field that have player_number, funion parent and dfs visited flag
+};
 
 static void get_neighbours(board_t b, uint32_t x, uint32_t y,
                            uint32_t neighbours_x_array[],
@@ -106,9 +114,28 @@ void delete_gamma(gamma_t* g) {
     free(g);
 }
 
-uint32_t check_field_player(gamma_t* g, uint32_t x, uint32_t y) {
-    uint32_t player = get_player(g->b, x, y);
-    return player;
+uint32_t get_player_at_position(gamma_t* g, uint32_t x, uint32_t y) {
+    return get_player(g->b, x, y);
+}
+
+uint32_t get_number_of_players(gamma_t* g){
+    return g->number_of_players;
+}
+
+uint32_t get_width(gamma_t* g){
+    return g->width;
+}
+
+uint32_t get_height(gamma_t* g){
+    return g->height;
+}
+
+uint32_t get_max_areas(gamma_t* g){
+    return g->max_areas;
+}
+
+bool has_player_done_golden_move(gamma_t* g, uint32_t player){
+    return !g->players[player-1]->golden_move_available;
 }
 
 uint32_t get_number_of_players_areas(gamma_t* b, uint32_t player) {
@@ -129,6 +156,13 @@ uint64_t get_number_of_pawns(gamma_t* g) {
         sum += g->players[i]->pawns_number;
     }
     return sum;
+}
+uint64_t get_number_of_free_fields(gamma_t* g){
+    return get_width(g) *  get_height(g) - get_number_of_pawns(g);
+}
+
+void set_player_done_golden_move(gamma_t* g, uint32_t player){
+    g->players[player - 1]->golden_move_available = false;
 }
 
 void add_pawn(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
@@ -239,7 +273,7 @@ static void fill_board(board_t b, char* buffer) {
         for (uint32_t j = 0; j < b->width; j++) {
             fill_cell(b, buffer, j, i);
         }
-        buffer[i * (b->width + 1) + b->height] = '\n';
+        buffer[i * (b->width + 1) + b->width] = '\n';
     }
 
 }

@@ -14,14 +14,6 @@ typedef struct gamma gamma_t;
   * Gamma game struct
   * Stores given parameters, array of players and board structure
   */
-struct gamma {
-    uint32_t width;
-    uint32_t height;
-    uint32_t number_of_players;
-    uint32_t max_areas;
-    player** players; ///< array to store information about every player
-    board_t b; ///< board with implemented field that have player_number, funion parent and dfs visited flag
-};
 
 
 /** @name Init and delete */
@@ -46,7 +38,7 @@ void delete_gamma(gamma_t* g);
 /** @name Board operations
  *
  */
- ///@{
+///@{
 void add_pawn(gamma_t* g, uint32_t player, uint32_t x, uint32_t y);
 
 void remove_pawn(gamma_t* g, uint32_t x, uint32_t y);
@@ -59,10 +51,24 @@ char* print_board(gamma_t* g);
 /** @name Accessors
  *
  */
- ///@{
-uint32_t check_field_player(gamma_t* g, uint32_t x, uint32_t y);
+///@{
+uint32_t get_player_at_position(gamma_t* g, uint32_t x, uint32_t y);
+
+uint32_t get_number_of_players(gamma_t* g);
+
+uint32_t get_width(gamma_t* g);
+
+uint32_t get_height(gamma_t* g);
+
+uint32_t get_max_areas(gamma_t* g);
+
+void set_player_done_golden_move(gamma_t* g, uint32_t player);
+
+bool has_player_done_golden_move(gamma_t* g, uint32_t player);
 
 uint64_t get_number_of_pawns(gamma_t* g);
+
+uint64_t get_number_of_free_fields(gamma_t* g);
 
 uint64_t get_number_of_players_pawns(gamma_t* g, uint32_t player);
 

@@ -1,14 +1,14 @@
 #include "gamma.h"
 #include "gamma_struct.h"
 
-static bool areParametersForNewGameValid(uint32_t width, uint32_t height,
-                                         uint32_t players) {
+static bool are_gamma_new_parameters_valid(uint32_t width, uint32_t height,
+                                           uint32_t players) {
     return width > 0 && height > 0 && players > 0;
 }
 
 gamma_t* gamma_new(uint32_t width, uint32_t height,
                    uint32_t players, uint32_t areas) {
-    if (!areParametersForNewGameValid(width, height, players)) {
+    if (!are_gamma_new_parameters_valid(width, height, players)) {
         return NULL;
     }
     return create_gamma(width, height, players, areas);
@@ -21,18 +21,18 @@ void gamma_delete(gamma_t* g) {
 }
 
 static bool are_gamma_move_parameters_valid(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
-    return !(g == NULL || player > g->number_of_players || player == 0 || x >= g->width || y >= g->height);
+    return g != NULL && player <= get_number_of_players(g) && player > 0 && x < get_width(g) && y < get_height(g);
 }
 
 bool gamma_move(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
     if (!are_gamma_move_parameters_valid(g, player, x, y)) {
         return false;
     }
-    if (check_field_player(g, x, y) != 0) {
+    if (get_player_at_position(g, x, y) != 0) {
         return false;
     }
     bool added_to_area_flag = number_of_neighbours_taken_by_player(g, player, x, y);
-    if (get_number_of_players_areas(g, player) == g->max_areas && !added_to_area_flag) {
+    if (get_number_of_players_areas(g, player) == get_max_areas(g) && !added_to_area_flag) {
         return false;
     }
     add_pawn(g, player, x, y);
@@ -44,19 +44,19 @@ bool gamma_golden_move(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
     if (!are_gamma_move_parameters_valid(g, player, x, y)) {
         return false;
     }
-    if (!g->players[player - 1]->golden_move_available) {
+    if (has_player_done_golden_move(g,player)) {
         return false;
     }
     //----------------------
 
     //move is not valid if it's done on empty field or players field
-    uint32_t player_to_remove = get_player(g->b, x, y);
+    uint32_t player_to_remove = get_player_at_position(g, x, y);
     if (player_to_remove == player || player_to_remove == 0) {
         return false;
     }
 
     //move is not valid when player has max number of areas, and this move will make another one
-    if (g->players[player - 1]->areas == g->max_areas && number_of_neighbours_taken_by_player(g, player, x, y) == 0) {
+    if (get_number_of_players_areas(g,player) == get_max_areas(g) && number_of_neighbours_taken_by_player(g, player, x, y) == 0) {
         return false;
     }
 
@@ -66,19 +66,19 @@ bool gamma_golden_move(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
     update_areas(g);
 
     //rollback if not valid
-    if (get_number_of_players_areas(g, player) > g->max_areas ||
-        get_number_of_players_areas(g, player_to_remove) > g->max_areas) {
+    if (get_number_of_players_areas(g, player) > get_max_areas(g) ||
+        get_number_of_players_areas(g, player_to_remove) > get_max_areas(g)) {
         remove_pawn(g, x, y);
         add_pawn(g, player_to_remove, x, y);
         update_areas(g);
         return false;
     }
-    g->players[player - 1]->golden_move_available = false;
+    set_player_done_golden_move(g,player);
     return true;
 }
 
 uint64_t gamma_busy_fields(gamma_t* g, uint32_t player) {
-    if (g == NULL || player > g->number_of_players || player == 0) {
+    if (g == NULL || player > get_number_of_players(g) || player == 0) {
         return 0;
     }
     return get_number_of_players_pawns(g, player);
@@ -86,10 +86,10 @@ uint64_t gamma_busy_fields(gamma_t* g, uint32_t player) {
 
 bool gamma_golden_possible(gamma_t* g, uint32_t player) {
     //check parameters
-    if (g == NULL || player > g->number_of_players || player == 0) {
+    if (g == NULL || player > get_number_of_players(g) || player == 0) {
         return false;
     }
-    if (!(g->players[player - 1]->golden_move_available)) {
+    if (has_player_done_golden_move(g,player)) {
         return false;
     }
     //check if there is at least one pawn that doesn't belong to player
@@ -101,14 +101,14 @@ bool gamma_golden_possible(gamma_t* g, uint32_t player) {
 
 uint64_t gamma_free_fields(gamma_t* g, uint32_t player) {
     //check parameters
-    if (g == NULL || player > g->number_of_players || player == 0) {
+    if (g == NULL || player > get_number_of_players(g) || player == 0) {
         return 0;
     }
 
-    if (g->players[player - 1]->areas == g->max_areas) {
+    if (get_number_of_players_areas(g,player) == get_max_areas(g)) {
         return get_number_of_players_area_edges(g, player);
     }
-    return g->width * g->height - get_number_of_pawns(g);
+    return get_number_of_free_fields(g);
 }
 
 char* gamma_board(gamma_t* g) {
