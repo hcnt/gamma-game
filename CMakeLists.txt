@@ -10,14 +10,14 @@ endif ()
 set_property(GLOBAL PROPERTY RULE_MESSAGES OFF)
 
 # Chcemy zobaczyć polecenia wywołane przez make.
-set(CMAKE_VERBOSE_MAKEFILE ON)
+#set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # Ustawiamy wspólne opcje kompilowania dla wszystkich wariantów projektu.
 set(CMAKE_C_FLAGS "-std=c11 -Wall -Wextra")
 # Domyślne opcje dla wariantów Release i Debug są sensowne.
 # Jeśli to konieczne, ustawiamy tu inne.
-set(CMAKE_C_FLAGS_RELEASE "-O3 -std=c11 -Wall -Wextra")
-set(CMAKE_C_FLAGS_DEBUG "-g")
+#set(CMAKE_C_FLAGS_RELEASE "-O3 -std=c11 -Wall -Wextra")
+#set(CMAKE_C_FLAGS_DEBUG "-g")
 
 # Wskazujemy pliki źródłowe.
 set(SOURCE_FILES
@@ -48,23 +48,31 @@ if (DOXYGEN_FOUND)
 endif (DOXYGEN_FOUND)
 
 
-enable_testing()
-file(GLOB files "tests/z2/*/*.c")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message("debug mode")
+    set(CMAKE_C_FLAGS_DEBUG "-g -I ${CMAKE_CURRENT_SOURCE_DIR}/src/")
 
-set(CTEST_PARALLEL_LEVEL 4)
-set(SOURCE_FILES_TESTING
-        ./src/gamma.c
-        ./src/gamma.h
-        ./src/player.h
-        ./src/gamma_struct.h
-        ./src/gamma_struct.c
-        ./src/board.c)
-set(memcheck_command "valgrind")
-set(memcheck_args "--leak-check=full")
+    enable_testing()
+    file(GLOB_RECURSE files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "tests/*.c")
 
-add_library(source OBJECT ${SOURCE_FILES_TESTING})
-foreach (file ${files})
-    string(REGEX REPLACE "(^.*/|\\.[^.]*$)" "" file_without_ext ${file})
-    add_executable(${file_without_ext} $<TARGET_OBJECTS:source> ${file})
-    add_test(${file_without_ext} ${memcheck_command} ${memcheck_args} ./${file_without_ext})
-endforeach ()
+    set(CTEST_PARALLEL_LEVEL 4)
+    set(SOURCE_FILES_TESTING
+            src/gamma.c
+            src/gamma.h
+            src/player.h
+            src/gamma_struct.h
+            src/gamma_struct.c
+            src/board.c)
+    set(memcheck_command "valgrind")
+    set(memcheck_args "--leak-check=full")
+
+    add_library(source OBJECT ${SOURCE_FILES_TESTING})
+    foreach (file ${files})
+        string(REGEX REPLACE "(^.*/|\\.[^.]*$)" "" file_without_ext ${file})
+        string(REGEX REPLACE "tests/z2/|/[^/]*\\.c$" "" directory ${file})
+        add_executable(${file_without_ext} $<TARGET_OBJECTS:source> ${file})
+        add_test(${file_without_ext} ${memcheck_command} ${memcheck_args} ./${file_without_ext})
+        set_tests_properties(${file_without_ext} PROPERTIES LABELS "${directory}")
+
+    endforeach ()
+endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
