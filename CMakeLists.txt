@@ -25,6 +25,8 @@ set(SOURCE_FILES
         src/gamma.h
         src/gamma_test.c
         src/player.h
+        src/vector.c
+        src/vector.h
         src/gamma_struct.h
         src/gamma_struct.c
         src/gamma_test2.c
@@ -52,7 +54,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     message("debug mode")
     set(CMAKE_C_FLAGS_DEBUG "-g -I ${CMAKE_CURRENT_SOURCE_DIR}/src/")
 
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/debug/bin )
+#    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/debug/bin )
     enable_testing()
     file(GLOB_RECURSE files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "tests/*.c")
 
@@ -62,7 +64,10 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
             src/gamma.h
             src/player.h
             src/gamma_struct.h
+            src/vector.c
+            src/vector.h
             src/gamma_struct.c
+            src/board.h
             src/board.c)
 
     add_library(source OBJECT ${SOURCE_FILES_TESTING})

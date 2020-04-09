@@ -1,4 +1,5 @@
 #include "gamma_struct.h"
+#include <stdlib.h>
 
 struct gamma {
     uint32_t width;
@@ -200,12 +201,5 @@ void update_areas(gamma_t* g) {
 
 
 char* print_board(gamma_t* g) {
-
-    uint64_t length = (g->height * (g->width + 1) + 1) * sizeof(char);
-    char* board = malloc(length);
-
-    fill_buffer(g->b, board);
-
-    board[length - 1] = '\0';
-    return board;
+    return get_board(g->b);
 }

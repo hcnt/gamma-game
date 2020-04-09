@@ -32,4 +32,4 @@ void delete_board(board_t b);
 
 board_t create_board(uint32_t width, uint32_t height);
 
-void fill_buffer(board_t b, char* buffer);
+char* get_board(board_t b);

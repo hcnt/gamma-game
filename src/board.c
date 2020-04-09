@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include "vector.h"
 #include "board.h"
 
 struct board {
@@ -19,7 +20,7 @@ board_t create_board(uint32_t width, uint32_t height) {
     board->players = calloc(array_length, sizeof(uint64_t));
     board->dfs_visited = calloc(array_length, sizeof(bool));
     board->funion_parent = calloc(array_length, sizeof(uint64_t));
-    for(uint64_t i = 0; i < array_length; i++){
+    for (uint64_t i = 0; i < array_length; i++) {
         board->funion_parent[i] = i;
     }
     return board;
@@ -38,6 +39,7 @@ uint64_t get_player(board_t b, uint32_t x, uint32_t y) {
     }
     return b->players[b->width * y + x];
 }
+
 void set_player(board_t b, uint64_t player, uint32_t x, uint32_t y) {
     b->players[b->width * y + x] = player;
 }
@@ -49,7 +51,8 @@ bool get_dfs_visited(board_t b, uint32_t x, uint32_t y) {
 void set_dfs_visited(board_t b, bool dfs_visited, uint32_t x, uint32_t y) {
     b->dfs_visited[b->width * y + x] = dfs_visited;
 }
-void reset_funion_parent(board_t b, uint32_t x, uint32_t y){
+
+void reset_funion_parent(board_t b, uint32_t x, uint32_t y) {
     b->funion_parent[b->width * y + x] = b->width * y + x;
 }
 
@@ -115,6 +118,7 @@ void reset_dfs_visited_flag(board_t b) {
         }
     }
 }
+
 void reset_funion_parents(board_t b) {
     for (uint32_t i = 0; i < b->width; i++) {
         for (uint32_t j = 0; j < b->height; j++) {
@@ -152,21 +156,43 @@ void create_area(board_t b, uint32_t x, uint32_t y, uint32_t new_root_x, uint32_
 //}
 //------------PRINTING-------------------------------------
 
-static void fill_cell(board_t b, char* buffer, int x, int y) {
-    uint32_t player = get_player(b, x, b->height - y - 1);
-    if (player != 0) {
-        buffer[y * (b->width + 1) + x] = (char) (player + '0');
-    } else {
-        buffer[y * (b->width + 1) + x] = '.';
+
+static void append_number_to_string(vectorchar* string, uint32_t number){
+    const int buffer_length = 12;
+    char buffer[buffer_length];
+    for (int i = buffer_length-1; i >= 0; i--) {
+        buffer[i] = (char) (number % 10 + '0');
+        number /= 10;
+    }
+    int i = 0;
+    while(i < buffer_length && buffer[i] == '0') i++;
+    while(i < buffer_length){
+        append_vectorchar(string, buffer[i]);
+        i++;
     }
 }
 
-void fill_buffer(board_t b, char* buffer) {
+static void fill_cell(board_t b, vectorchar* string, int x, int y) {
+    uint32_t player = get_player(b, x, b->height - y - 1);
+    if (player == 0) {
+        append_vectorchar(string, '.');
+    } else if (player <= 9) {
+        append_vectorchar(string, (char) (player + '0'));
+    } else {
+        append_vectorchar(string, '[');
+        append_number_to_string(string,player);
+        append_vectorchar(string, ']');
+    }
+}
+
+char* get_board(board_t b) {
+    vectorchar string = init_vectorchar();
     for (uint32_t i = 0; i < b->height; i++) {
         for (uint32_t j = 0; j < b->width; j++) {
-            fill_cell(b, buffer, j, i);
+            fill_cell(b, &string, j, i);
         }
-        buffer[i * (b->width + 1) + b->width] = '\n';
+        append_vectorchar(&string, '\n');
     }
-
+    append_vectorchar(&string, '\0');
+    return string.array;
 }

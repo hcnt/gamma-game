@@ -2,7 +2,6 @@
 #define GAMMA_PLAYER_H
 
 #include <stdint.h>
-#include <stdlib.h>
 #include <stdbool.h>
 
 typedef struct player {
