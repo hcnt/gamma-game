@@ -5,7 +5,9 @@
 
 #include <stdint.h>
 #include "stdbool.h"
-
+/**
+ * board struct typedef
+ */
 typedef struct board* board_t;
 /**
  * @name Init and delete
@@ -83,13 +85,13 @@ void get_neighbours(board_t b, uint32_t x, uint32_t y,
 bool was_added_to_area(board_t b, uint32_t x, uint32_t y);
 
 /**
- * clean structure of areas on the board
+ * @brief Clean structure of areas on the board
  * @param[in,out] b
  */
 void reset_all_areas(board_t b);
 
 /**
- * add (x1,y1) to area represented by (x2,y2)
+ * @brief merge 2 areas with given representatives
  * @param[in,out] b
  * @param[in] x1
  * @param[in] y1
@@ -101,7 +103,7 @@ bool union_operation(board_t b, uint32_t x1, uint32_t y1, uint32_t x2, __uint32_
 //@}
 
 /**
- * Recursively add all neighbours of (x,y) belonging to the same player to area
+ * @brief recursively attaches to area all fields adjacent to (x,y)
  * @param[in,out] b
  * @param[in] x
  * @param[in] y
@@ -110,7 +112,7 @@ void create_area(board_t b, uint32_t x, uint32_t y);
 //@}
 
 /**
- * create buffer with board state
+ * @brief create buffer with board state
  * @param[in] b
  * @return board state
  */
