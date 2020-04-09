@@ -1,23 +1,30 @@
+/**@file
+ * Implements information about areas using find and union, and creates them using dfs pass
+ */
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include "vector.h"
 #include "board.h"
-
+/**
+ * structure to store information about board
+ */
 struct board {
-    uint32_t width;
-    uint32_t height;
-    uint32_t* players;
-    bool* dfs_visited;
-    uint32_t* funion_parent;
+    uint32_t width; ///< board width
+    uint32_t height;///< board height
+    uint32_t* fields;///< array to store what player is on given field, 0 if no one
+    bool* dfs_visited;///< array of flags to check which fields were already visited during dfs
+    uint32_t* funion_parent;///<array to store find & union tree data
 };
 
+//-------------- INIT AND DELETE-----------------
 board_t create_board(uint32_t width, uint32_t height) {
     board_t board = malloc(sizeof(struct board));
     board->width = width;
     board->height = height;
     uint64_t array_length = height * width;
-    board->players = calloc(array_length, sizeof(uint64_t));
+    board->fields = calloc(array_length, sizeof(uint64_t));
     board->dfs_visited = calloc(array_length, sizeof(bool));
     board->funion_parent = calloc(array_length, sizeof(uint64_t));
     for (uint64_t i = 0; i < array_length; i++) {
@@ -28,27 +35,28 @@ board_t create_board(uint32_t width, uint32_t height) {
 
 void delete_board(board_t b) {
     free(b->funion_parent);
-    free(b->players);
+    free(b->fields);
     free(b->dfs_visited);
     free(b);
 }
+//-----------------------------------
 
 uint64_t get_player(board_t b, uint32_t x, uint32_t y) {
     if (b->width * y + x >= b->height * b->width) {
         return 0;
     }
-    return b->players[b->width * y + x];
+    return b->fields[b->width * y + x];
 }
 
 void set_player(board_t b, uint64_t player, uint32_t x, uint32_t y) {
-    b->players[b->width * y + x] = player;
+    b->fields[b->width * y + x] = player;
 }
 
-bool get_dfs_visited(board_t b, uint32_t x, uint32_t y) {
+bool was_added_to_area(board_t b, uint32_t x, uint32_t y) {
     return b->dfs_visited[b->width * y + x];
 }
 
-void set_dfs_visited(board_t b, bool dfs_visited, uint32_t x, uint32_t y) {
+static void set_dfs_visited(board_t b, bool dfs_visited, uint32_t x, uint32_t y) {
     b->dfs_visited[b->width * y + x] = dfs_visited;
 }
 
@@ -111,26 +119,19 @@ bool union_operation(board_t b, uint32_t x1, uint32_t y1, uint32_t x2, __uint32_
 }
 
 //------------DFS and areas--------------
-void reset_dfs_visited_flag(board_t b) {
+void reset_all_areas(board_t b) {
     for (uint32_t i = 0; i < b->width; i++) {
         for (uint32_t j = 0; j < b->height; j++) {
             set_dfs_visited(b, false, i, j);
-        }
-    }
-}
-
-void reset_funion_parents(board_t b) {
-    for (uint32_t i = 0; i < b->width; i++) {
-        for (uint32_t j = 0; j < b->height; j++) {
             reset_funion_parent(b, i, j);
         }
     }
 }
 
-void create_area(board_t b, uint32_t x, uint32_t y, uint32_t new_root_x, uint32_t new_root_y) {
+void create_area_r(board_t b, uint32_t x, uint32_t y, uint32_t new_root_x, uint32_t new_root_y) {
     if (get_player(b, x, y) == 0)
         return;
-    if (get_dfs_visited(b, x, y))
+    if (was_added_to_area(b, x, y))
         return;
     set_dfs_visited(b, true, x, y);
     union_operation(b, x, y, new_root_x, new_root_y);
@@ -143,17 +144,17 @@ void create_area(board_t b, uint32_t x, uint32_t y, uint32_t new_root_x, uint32_
     get_neighbours(b, x, y, neighbours_x, neighbours_y, neighbours_player, neighbours_exists);
     for (int i = 0; i < 4; i++) {
         if (neighbours_exists[i] && get_player(b, x, y) == neighbours_player[i] &&
-            !get_dfs_visited(b, neighbours_x[i], neighbours_y[i])) {
-            create_area(b, neighbours_x[i], neighbours_y[i], new_root_x, new_root_y);
+            !was_added_to_area(b, neighbours_x[i], neighbours_y[i])) {
+            create_area_r(b, neighbours_x[i], neighbours_y[i], new_root_x, new_root_y);
         }
     }
 }
 
-//recursively attaches all neighbouring player fields to area with field at (x,y), and sets all
+//recursively attaches all neighboring player fields to area with field at (x,y), and sets all
 //these fields visited status to true
-//void create_area(board_t b, uint32_t x, uint32_t y) {
-//    create_area_r(b,x,y,x,y);
-//}
+void create_area(board_t b, uint32_t x, uint32_t y) {
+    create_area_r(b,x,y,x,y);
+}
 //------------PRINTING-------------------------------------
 
 

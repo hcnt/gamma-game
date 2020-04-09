@@ -1,15 +1,25 @@
 #include "gamma_struct.h"
 #include <stdlib.h>
 
+/**
+  * @brief Gamma game struct.
+  * Stores given parameters, array of players and board structure
+  */
 struct gamma {
-    uint32_t width;
-    uint32_t height;
-    uint32_t number_of_players;
-    uint32_t max_areas;
+    uint32_t width; ///< width of the board
+    uint32_t height; ///< height of the board
+    uint32_t number_of_players; ///< how many players play
+    uint32_t max_areas; ///< max number of areas player can have
     player* players; ///< array to store information about every player
-    board_t b; ///< board with implemented field that have player_number, funion parent and dfs visited flag
+    board_t b; ///< board with implemented area and fields management
 };
 
+/**
+ * @brief merge all adjacent fields to (x,y) to one area
+ * @param[in,out] g Gamma struct
+ * @param[in] x
+ * @param[in] y
+ */
 static void merge(gamma_t* g, uint32_t x, uint32_t y) {
 
     int merged_areas = 0;
@@ -28,8 +38,17 @@ static void merge(gamma_t* g, uint32_t x, uint32_t y) {
     g->players[get_player(g->b, x, y) - 1].areas -= merged_areas - 1;
 }
 
-static void update_edges(gamma_t* g, uint32_t player, uint32_t x, uint32_t y, bool addingFlag) {
-    int sign = addingFlag ? 1 : -1;
+/**
+ * @brief update free edges adjacent to player, can use it while adding or removing pawn on field
+ * depending on adding_flag
+ * @param[in,out] g Gamma structure
+ * @param[in] player number of player to update edges
+ * @param[in] x
+ * @param[in] y
+ * @param[in] adding_flag true if you are adding pawn, false if removing
+ */
+static void update_edges(gamma_t* g, uint32_t player, uint32_t x, uint32_t y, bool adding_flag) {
+    int sign = adding_flag ? 1 : -1;
     int number_of_new_edges = 0;
     bool at_least_one_neighbour = false;
     uint32_t neighbours_x[4];
@@ -62,7 +81,7 @@ static void update_edges(gamma_t* g, uint32_t player, uint32_t x, uint32_t y, bo
     g->players[player - 1].area_edges -= sign * at_least_one_neighbour;
 }
 
-//----------PUBLIC FUNCTIONS------------------------
+//----------INIT AND DEL------------------------
 
 gamma_t* create_gamma(uint32_t width, uint32_t height,
                       uint32_t players, uint32_t areas) {
@@ -172,24 +191,24 @@ int number_of_neighbours_taken_by_player(gamma_t* g, uint32_t player, uint32_t x
 
 //------------DFS AND UPDATING AREAS---------------------
 
-static void reset_areas(gamma_t* b) {
+
+static void reset_areas_counter(gamma_t* b) {
     for (uint32_t i = 0; i < b->number_of_players; i++) {
         b->players[i].areas = 0;
     }
 }
 
 void update_areas(gamma_t* g) {
-    reset_areas(g);
-    reset_funion_parents(g->b);
-    reset_dfs_visited_flag(g->b);
+    reset_areas_counter(g);
+    reset_all_areas(g->b);
     uint32_t player;
 
     for (uint32_t i = 0; i < g->width; i++) {
         for (uint32_t j = 0; j < g->height; j++) {
             player = get_player(g->b, i, j);
-            if (player != 0 && !get_dfs_visited(g->b, i, j)) {
+            if (player != 0 && !was_added_to_area(g->b, i, j)) {
                 g->players[player - 1].areas++;
-                create_area(g->b, i, j, i, j);
+                create_area(g->b, i, j);
             }
         }
     }

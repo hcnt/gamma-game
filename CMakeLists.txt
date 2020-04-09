@@ -30,6 +30,7 @@ set(SOURCE_FILES
         src/gamma_struct.h
         src/gamma_struct.c
         src/gamma_test2.c
+        src/board.h
         src/board.c)
 
 # Wskazujemy plik wykonywalny.
