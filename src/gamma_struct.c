@@ -9,29 +9,6 @@ struct gamma {
     board_t b; ///< board with implemented field that have player_number, funion parent and dfs visited flag
 };
 
-static void get_neighbours(board_t b, uint32_t x, uint32_t y,
-                           uint32_t neighbours_x_array[],
-                           uint32_t neighbours_y_array[],
-                           uint32_t neighbours_player_array[],
-                           bool neighbour_exists[]) {
-    uint32_t neighbour_x;
-    uint32_t neighbour_y;
-
-    for (int i = 0; i < 4; i++) {
-        if ((x == 0 && i == 2) || (x == b->width - 1 && i == 0) || (y == 0 && i == 3) ||
-            (y == b->height - 1 && i == 1)) {
-            neighbour_exists[i] = false;
-        } else {
-            neighbour_exists[i] = true;
-        }
-        neighbour_x = x + (i == 0) - (i == 2);
-        neighbour_y = y + (i == 1) - (i == 3);
-        neighbours_x_array[i] = neighbour_x;
-        neighbours_y_array[i] = neighbour_y;
-        neighbours_player_array[i] = get_player(b, neighbour_x, neighbour_y);
-    }
-}
-
 static void merge(gamma_t* g, uint32_t x, uint32_t y) {
 
     int merged_areas = 0;
@@ -43,7 +20,7 @@ static void merge(gamma_t* g, uint32_t x, uint32_t y) {
     get_neighbours(g->b, x, y, neighbours_x, neighbours_y, neighbours_player, neighbours_exists);
     for (int i = 0; i < 4; i++) {
         if (neighbours_exists[i] && neighbours_player[i] == get_player(g->b, x, y) &&
-            union_operation(g->b, neighbours_x[i], neighbours_y[i], x, y)) {
+            union_operation(g->b, x, y,neighbours_x[i],neighbours_y[i])) {
             merged_areas++;
         }
     }
@@ -118,24 +95,24 @@ uint32_t get_player_at_position(gamma_t* g, uint32_t x, uint32_t y) {
     return get_player(g->b, x, y);
 }
 
-uint32_t get_number_of_players(gamma_t* g){
+uint32_t get_number_of_players(gamma_t* g) {
     return g->number_of_players;
 }
 
-uint32_t get_width(gamma_t* g){
+uint32_t get_width(gamma_t* g) {
     return g->width;
 }
 
-uint32_t get_height(gamma_t* g){
+uint32_t get_height(gamma_t* g) {
     return g->height;
 }
 
-uint32_t get_max_areas(gamma_t* g){
+uint32_t get_max_areas(gamma_t* g) {
     return g->max_areas;
 }
 
-bool has_player_done_golden_move(gamma_t* g, uint32_t player){
-    return !g->players[player-1]->golden_move_available;
+bool has_player_done_golden_move(gamma_t* g, uint32_t player) {
+    return !g->players[player - 1]->golden_move_available;
 }
 
 uint32_t get_number_of_players_areas(gamma_t* b, uint32_t player) {
@@ -157,17 +134,17 @@ uint64_t get_number_of_pawns(gamma_t* g) {
     }
     return sum;
 }
-uint64_t get_number_of_free_fields(gamma_t* g){
-    return get_width(g) *  get_height(g) - get_number_of_pawns(g);
+
+uint64_t get_number_of_free_fields(gamma_t* g) {
+    return get_width(g) * get_height(g) - get_number_of_pawns(g);
 }
 
-void set_player_done_golden_move(gamma_t* g, uint32_t player){
+void set_player_done_golden_move(gamma_t* g, uint32_t player) {
     g->players[player - 1]->golden_move_available = false;
 }
 
 void add_pawn(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
     set_player(g->b, player, x, y);
-    set_funion_parent(g->b, x, y, x, y);
     update_edges(g, player, x, y, true);
     merge(g, x, y);
     g->players[player - 1]->pawns_number++;
@@ -204,86 +181,30 @@ static void reset_areas(gamma_t* b) {
     }
 }
 
-static void reset_dfs_visited_flag(board_t b) {
-    for (uint32_t i = 0; i < b->width; i++) {
-        for (uint32_t j = 0; j < b->height; j++) {
-            set_dfs_visited(b, false, i, j);
-        }
-    }
-}
-
-static void update_areas_dfs(board_t b, uint32_t x, uint32_t y, uint32_t new_root_x, uint32_t new_root_y) {
-    if (get_player(b, x, y) == 0)
-        return;
-    if (get_dfs_visited(b, x, y))
-        return;
-    set_dfs_visited(b, true, x, y);
-    union_operation(b, new_root_x, new_root_y, x, y);
-
-    uint32_t neighbours_x[4];
-    uint32_t neighbours_y[4];
-    uint32_t neighbours_player[4];
-    bool neighbours_exists[4];
-
-    get_neighbours(b, x, y, neighbours_x, neighbours_y, neighbours_player, neighbours_exists);
-    for (int i = 0; i < 4; i++) {
-        if (neighbours_exists[i] && get_player(b, x, y) == neighbours_player[i] &&
-            !get_dfs_visited(b, neighbours_x[i], neighbours_y[i])) {
-            update_areas_dfs(b, neighbours_x[i], neighbours_y[i], new_root_x, new_root_y);
-        }
-    }
-}
-
-static void traverse_and_update_area(gamma_t* g) {
+void update_areas(gamma_t* g) {
+    reset_areas(g);
+    reset_funion_parents(g->b);
+    reset_dfs_visited_flag(g->b);
     uint32_t player;
-    for (uint32_t i = 0; i < g->b->width; i++) {
-        for (uint32_t j = 0; j < g->b->height; j++) {
+
+    for (uint32_t i = 0; i < g->width; i++) {
+        for (uint32_t j = 0; j < g->height; j++) {
             player = get_player(g->b, i, j);
             if (player != 0 && !get_dfs_visited(g->b, i, j)) {
                 g->players[player - 1]->areas++;
-                update_areas_dfs(g->b, i, j, i, j);
+                create_area(g->b, i, j, i, j);
             }
         }
     }
 }
 
-void update_areas(gamma_t* g) {
-    //set all areas to 0
-    reset_areas(g);
-
-    //increment area counters by DFS pass through the board
-    traverse_and_update_area(g);
-
-    reset_dfs_visited_flag(g->b);
-}
-
-//------------PRINTING-------------------------------------
-
-static void fill_cell(board_t b, char* buffer, int x, int y) {
-    uint32_t player = get_player(b, x, b->height - y - 1);
-    if (player != 0) {
-        buffer[y * (b->width + 1) + x] = (char) (player + '0');
-    } else {
-        buffer[y * (b->width + 1) + x] = '.';
-    }
-}
-
-static void fill_board(board_t b, char* buffer) {
-    for (uint32_t i = 0; i < b->height; i++) {
-        for (uint32_t j = 0; j < b->width; j++) {
-            fill_cell(b, buffer, j, i);
-        }
-        buffer[i * (b->width + 1) + b->width] = '\n';
-    }
-
-}
 
 char* print_board(gamma_t* g) {
 
     uint64_t length = (g->height * (g->width + 1) + 1) * sizeof(char);
     char* board = malloc(length);
 
-    fill_board(g->b, board);
+    fill_buffer(g->b, board);
 
     board[length - 1] = '\0';
     return board;

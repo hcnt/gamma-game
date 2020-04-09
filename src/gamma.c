@@ -28,26 +28,28 @@ bool gamma_move(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
     if (!are_gamma_move_parameters_valid(g, player, x, y)) {
         return false;
     }
+    //can't move to non empty field
     if (get_player_at_position(g, x, y) != 0) {
         return false;
     }
+
+    //can't add new area when player is already at maximum areas
     bool added_to_area_flag = number_of_neighbours_taken_by_player(g, player, x, y);
     if (get_number_of_players_areas(g, player) == get_max_areas(g) && !added_to_area_flag) {
         return false;
     }
+
     add_pawn(g, player, x, y);
     return true;
 }
 
 bool gamma_golden_move(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
-    //---PARAMETER CHECK----
     if (!are_gamma_move_parameters_valid(g, player, x, y)) {
         return false;
     }
-    if (has_player_done_golden_move(g,player)) {
+    if (has_player_done_golden_move(g, player)) {
         return false;
     }
-    //----------------------
 
     //move is not valid if it's done on empty field or players field
     uint32_t player_to_remove = get_player_at_position(g, x, y);
@@ -56,7 +58,8 @@ bool gamma_golden_move(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
     }
 
     //move is not valid when player has max number of areas, and this move will make another one
-    if (get_number_of_players_areas(g,player) == get_max_areas(g) && number_of_neighbours_taken_by_player(g, player, x, y) == 0) {
+    if (get_number_of_players_areas(g, player) == get_max_areas(g) &&
+        number_of_neighbours_taken_by_player(g, player, x, y) == 0) {
         return false;
     }
 
@@ -73,7 +76,7 @@ bool gamma_golden_move(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
         update_areas(g);
         return false;
     }
-    set_player_done_golden_move(g,player);
+    set_player_done_golden_move(g, player);
     return true;
 }
 
@@ -89,7 +92,7 @@ bool gamma_golden_possible(gamma_t* g, uint32_t player) {
     if (g == NULL || player > get_number_of_players(g) || player == 0) {
         return false;
     }
-    if (has_player_done_golden_move(g,player)) {
+    if (has_player_done_golden_move(g, player)) {
         return false;
     }
     //check if there is at least one pawn that doesn't belong to player
@@ -100,12 +103,13 @@ bool gamma_golden_possible(gamma_t* g, uint32_t player) {
 }
 
 uint64_t gamma_free_fields(gamma_t* g, uint32_t player) {
-    //check parameters
     if (g == NULL || player > get_number_of_players(g) || player == 0) {
         return 0;
     }
 
-    if (get_number_of_players_areas(g,player) == get_max_areas(g)) {
+    //If player is at maximum number of areas,
+    //he can place pawn only at fields neighbouring to already placed fields.
+    if (get_number_of_players_areas(g, player) == get_max_areas(g)) {
         return get_number_of_players_area_edges(g, player);
     }
     return get_number_of_free_fields(g);

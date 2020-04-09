@@ -52,6 +52,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     message("debug mode")
     set(CMAKE_C_FLAGS_DEBUG "-g -I ${CMAKE_CURRENT_SOURCE_DIR}/src/")
 
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/debug/bin )
     enable_testing()
     file(GLOB_RECURSE files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "tests/*.c")
 
@@ -63,15 +64,13 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
             src/gamma_struct.h
             src/gamma_struct.c
             src/board.c)
-    set(memcheck_command "valgrind")
-    set(memcheck_args "--leak-check=full")
 
     add_library(source OBJECT ${SOURCE_FILES_TESTING})
     foreach (file ${files})
         string(REGEX REPLACE "(^.*/|\\.[^.]*$)" "" file_without_ext ${file})
         string(REGEX REPLACE "tests/z2/|/[^/]*\\.c$" "" directory ${file})
         add_executable(${file_without_ext} $<TARGET_OBJECTS:source> ${file})
-        add_test(${file_without_ext} ${memcheck_command} ${memcheck_args} ./${file_without_ext})
+        add_test(${file_without_ext} ${file_without_ext})
         set_tests_properties(${file_without_ext} PROPERTIES LABELS "${directory}")
 
     endforeach ()
