@@ -13,9 +13,10 @@
 struct board {
     uint32_t width; ///< board width
     uint32_t height;///< board height
-    uint32_t* fields;///< array to store what player is on given field, 0 if no one
+    uint64_t* fields;///< array to store what player is on given field, 0 if no one
     bool* dfs_visited;///< array of flags to check which fields were already visited during dfs
-    uint32_t* funion_parent;///<array to store find & union tree data
+    uint64_t* funion_parent;///<array to store find & union tree data
+    uint8_t* funion_rank; ///< array to store ranks ranks of nodes in find & union
 };
 
 //-------------- INIT AND DELETE-----------------
@@ -26,6 +27,7 @@ board_t create_board(uint32_t width, uint32_t height) {
     uint64_t array_length = height * width;
     board->fields = calloc(array_length, sizeof(uint64_t));
     board->dfs_visited = calloc(array_length, sizeof(bool));
+    board->funion_rank = calloc(array_length, sizeof(uint64_t));
     board->funion_parent = calloc(array_length, sizeof(uint64_t));
     for (uint64_t i = 0; i < array_length; i++) {
         board->funion_parent[i] = i;
@@ -35,6 +37,7 @@ board_t create_board(uint32_t width, uint32_t height) {
 
 void delete_board(board_t b) {
     free(b->funion_parent);
+    free(b->funion_rank);
     free(b->fields);
     free(b->dfs_visited);
     free(b);
@@ -114,7 +117,15 @@ bool union_operation(board_t b, uint32_t x1, uint32_t y1, uint32_t x2, __uint32_
     if (root1 == root2) {
         return false;
     }
-    b->funion_parent[root1] = root2;
+    if(b->funion_rank[root1] > b->funion_rank[root2]){
+        b->funion_parent[root2] = root1;
+    } else if(b->funion_rank[root1] < b->funion_rank[root2]) {
+        b->funion_parent[root1] = root2;
+    } else {
+        b->funion_parent[root1] = root2;
+        b->funion_rank[root2]++;
+    }
+
     return true;
 }
 
@@ -124,6 +135,7 @@ void reset_all_areas(board_t b) {
         for (uint32_t j = 0; j < b->height; j++) {
             set_dfs_visited(b, false, i, j);
             reset_funion_parent(b, i, j);
+            b->funion_rank[b->width * j + i] = 0;
         }
     }
 }
