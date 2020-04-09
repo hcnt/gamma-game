@@ -1,4 +1,5 @@
 #include "gamma.h"
+#include <stdlib.h>
 #include "gamma_struct.h"
 
 static bool are_gamma_new_parameters_valid(uint32_t width, uint32_t height,
