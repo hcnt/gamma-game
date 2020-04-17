@@ -1,15 +1,27 @@
+/**@file
+ * implements gamma interface
+ */
 #include "gamma.h"
 #include <stdlib.h>
 #include "gamma_struct.h"
 
+/**
+ * @brief checks if parameters given to gamma_new are valid
+ * @param[in] width
+ * @param[in] height
+ * @param[in] players
+ * @param[in] areas
+ * @return true if parameters are valid, false otherwise
+ */
 static bool are_gamma_new_parameters_valid(uint32_t width, uint32_t height,
-                                           uint32_t players) {
-    return width > 0 && height > 0 && players > 0;
+                                           uint32_t players,uint32_t areas) {
+    return width > 0 && height > 0 && players > 0 && areas > 0;
 }
 
 gamma_t* gamma_new(uint32_t width, uint32_t height,
                    uint32_t players, uint32_t areas) {
-    if (!are_gamma_new_parameters_valid(width, height, players)) {
+
+    if (!are_gamma_new_parameters_valid(width, height, players,areas)) {
         return NULL;
     }
     return create_gamma(width, height, players, areas);
@@ -20,7 +32,14 @@ void gamma_delete(gamma_t* g) {
         delete_gamma(g);
     }
 }
-
+/**
+ * @brief checks if parameters given to gamma_move are valid
+ * @param[in] g
+ * @param[in] player
+ * @param[in] x
+ * @param[in] y
+ * @return true if parameters are valid, false otherwise
+ */
 static bool are_gamma_move_parameters_valid(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
     return g != NULL && player <= get_number_of_players(g) && player > 0 && x < get_width(g) && y < get_height(g);
 }

@@ -27,9 +27,27 @@ board_t create_board(uint32_t width, uint32_t height) {
     board->height = height;
     uint64_t array_length = height * width;
     board->fields = calloc(array_length, sizeof(uint64_t));
+    if (board->fields == NULL) {
+        return NULL;
+    }
     board->dfs_visited = calloc(array_length, sizeof(bool));
+    if (board->dfs_visited == NULL) {
+        free(board->fields);
+        return NULL;
+    }
     board->funion_rank = calloc(array_length, sizeof(uint64_t));
+    if (board->funion_rank == NULL) {
+        free(board->fields);
+        free(board->dfs_visited);
+        return NULL;
+    }
     board->funion_parent = calloc(array_length, sizeof(uint64_t));
+    if (board->funion_parent == NULL) {
+        free(board->fields);
+        free(board->dfs_visited);
+        free(board->funion_rank);
+        return NULL;
+    }
     for (uint64_t i = 0; i < array_length; i++) {
         board->funion_parent[i] = i;
     }
@@ -87,9 +105,9 @@ void get_neighbours(board_t b, uint32_t x, uint32_t y,
 
 /**
  * find funion root of field
- * @param b
- * @param field_index field position in array
- * @return index of root
+ * @param[in,out] b
+ * @param[in] field_index field position in array
+ * @return[in] index of root
  */
 static uint64_t find_root(board_t b, uint64_t field_index) {
     uint64_t root = field_index;
@@ -167,9 +185,9 @@ void create_area(board_t b, uint32_t x, uint32_t y) {
 //------------PRINTING-------------------------------------
 
 /**
- * @brief convert number to chars and
- * @param string
- * @param number
+ * @brief convert number to chars and add to the end of string
+ * @param[in,out] string
+ * @param[in] number
  */
 static void append_number_to_string(vectorchar* string, uint32_t number) {
     const int buffer_length = 12;
@@ -185,6 +203,7 @@ static void append_number_to_string(vectorchar* string, uint32_t number) {
         i++;
     }
 }
+
 /**
  * put content on field (x,y) to buffer string
  * @param[in] b
@@ -211,8 +230,13 @@ char* get_board(board_t b) {
         for (uint32_t j = 0; j < b->width; j++) {
             fill_cell(b, &string, j, i);
         }
-        append_vectorchar(&string, '\n');
+        //return NULL if vector couldn't allocate memory
+        if (!append_vectorchar(&string, '\n')) {
+            return NULL;
+        }
     }
-    append_vectorchar(&string, '\0');
+    if (!append_vectorchar(&string, '\0')) {
+        return NULL;
+    }
     return string.array;
 }

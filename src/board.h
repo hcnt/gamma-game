@@ -15,15 +15,15 @@ typedef struct board* board_t;
 //@{
 /**
  * Creates new Board
- * @param width
- * @param height
+ * @param[in] width
+ * @param[in] height
  * @return new board with all player fields set to 0
  */
 board_t create_board(uint32_t width, uint32_t height);
 
 /**
  * @brief Free memory allocated for board struct
- * @param b board to delete
+ * @param[in,out] b board to delete
  */
 void delete_board(board_t b);
 //@}

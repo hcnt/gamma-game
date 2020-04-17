@@ -1,9 +1,12 @@
+/** @file
+ * implements lower gamma interface
+ */
 #include "gamma_struct.h"
 #include <stdlib.h>
 
 /**
   * @brief Gamma game struct.
-  * Stores given parameters, array of players and board structure
+  * stores given parameters, array of players and board structure
   */
 struct gamma {
     uint32_t width; ///< width of the board
@@ -91,7 +94,14 @@ gamma_t* create_gamma(uint32_t width, uint32_t height,
     game->number_of_players = players;
     game->max_areas = areas;
     game->b = create_board(width, height);
+    if(game->b == NULL){
+        return NULL;
+    }
     game->players = malloc(players * sizeof(player));
+    if(game->players == NULL){
+        free(game->b);
+        return NULL;
+    }
     for (uint32_t i = 0; i < players; i++) {
         game->players[i].areas = 0;
         game->players[i].area_edges = 0;
@@ -192,9 +202,13 @@ int number_of_neighbours_taken_by_player(gamma_t* g, uint32_t player, uint32_t x
 //------------DFS AND UPDATING AREAS---------------------
 
 
-static void reset_areas_counter(gamma_t* b) {
-    for (uint32_t i = 0; i < b->number_of_players; i++) {
-        b->players[i].areas = 0;
+/**
+ * @brief set every player area counter to 0
+ * @param[in,out] g Gamma board
+ */
+static void reset_areas_counter(gamma_t* g) {
+    for (uint32_t i = 0; i < g->number_of_players; i++) {
+        g->players[i].areas = 0;
     }
 }
 

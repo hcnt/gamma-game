@@ -1,7 +1,5 @@
 /** @file
  * Lower level Gamma interface.
- *
- * @author Jacek Kuśmierczyk
  */
 #ifndef GAMMA_GAMMA_H
 #define GAMMA_GAMMA_H
@@ -63,7 +61,7 @@ void update_areas(gamma_t* g);
 
 /**
  * @brief get buffer with string represenation of the board
- * @param g
+ * @param[in] g
  * @return
  */
 char* print_board(gamma_t* g);
@@ -85,7 +83,7 @@ uint32_t get_player_at_position(gamma_t* g, uint32_t x, uint32_t y);
 
 /**
  * gets number of players in a Gamma game
- * @param g
+ * @param[in] g
  * @return
  */
 uint32_t get_number_of_players(gamma_t* g);
@@ -130,21 +128,21 @@ bool has_player_done_golden_move(gamma_t* g, uint32_t player);
 
 /**
  * gets number of all taken fields on board
- * @param g
+ * @param[in] g
  * @return
  */
 uint64_t get_number_of_pawns(gamma_t* g);
 
 /**
  * gets number of all free fields on board
- * @param g
+ * @param[in] g
  * @return
  */
 uint64_t get_number_of_free_fields(gamma_t* g);
 
 /**
  * gets number of fields taken by player
- * @param g
+ * @param[in] g
  * @param player
  * @return
  */
@@ -152,26 +150,26 @@ uint64_t get_number_of_players_pawns(gamma_t* g, uint32_t player);
 
 /**
  * gets number of areas that player has
- * @param g
- * @param player
+ * @param[in] g
+ * @param[in] player
  * @return
  */
 uint32_t get_number_of_players_areas(gamma_t* g, uint32_t player);
 
 /**
  * gets number of free fields adjacent to players fields
- * @param g
- * @param player
+ * @param[in] g
+ * @param[in] player
  * @return
  */
 uint64_t get_number_of_players_area_edges(gamma_t* g, uint32_t player);
 
 /**
  * get number of adjacent fields to (x,y) that have the same player as (x,y)
- * @param g
- * @param player
- * @param x
- * @param y
+ * @param[in] g
+ * @param[in] player
+ * @param[in] x
+ * @param[in] y
  * @return number of adjacent fields, 0 if (x,y) isn't taken
  */
 int number_of_neighbours_taken_by_player(gamma_t* g, uint32_t player, uint32_t x, uint32_t y);

@@ -29,7 +29,6 @@ set(SOURCE_FILES
         src/vector.h
         src/gamma_struct.h
         src/gamma_struct.c
-        src/gamma_test2.c
         src/board.h
         src/board.c)
 
@@ -53,7 +52,7 @@ endif (DOXYGEN_FOUND)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     message("debug mode")
-    set(CMAKE_C_FLAGS_DEBUG "-g -I ${CMAKE_CURRENT_SOURCE_DIR}/src/")
+    set(CMAKE_C_FLAGS_DEBUG "-O3 -g -I ${CMAKE_CURRENT_SOURCE_DIR}/src/")
 
 #    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/debug/bin )
     enable_testing()
