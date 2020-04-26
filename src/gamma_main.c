@@ -191,9 +191,20 @@ int main() {
     state->mode = MODE_CHOOSE;
     state->buffer_size = BUFFER_START_SIZE;
     state->eof = false;
+
+    state->gamma = gamma_new(5,5,10,5);
+    state->gamma_h = 5;
+    state->gamma_w = 5;
+    state->players = 10;
+    run_interactive_mode(state);
+    gamma_delete(state->gamma);
+    free(state->buffer);
+    free(state);
+    return 0;
     while (!state->eof) {
         parseLine(state);
     }
+
     gamma_delete(state->gamma);
     free(state->buffer);
     free(state);

@@ -11,8 +11,9 @@ enum state_mode {
 
 struct state {
     gamma_t* gamma;
-    int gamma_h;
-    int gamma_w;
+    uint32_t gamma_h;
+    uint32_t gamma_w;
+    uint32_t players;
     enum state_mode mode;
     int line;
     size_t buffer_size;
