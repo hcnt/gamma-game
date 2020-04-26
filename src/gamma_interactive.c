@@ -1,25 +1,28 @@
 #include <ncurses.h>
 #include "gamma_interactive.h"
 
-void handleCursorMovement(chtype key, WINDOW* game) {
+bool handleCursorMovement(char key, WINDOW* game) {
     int x = getcurx(game);
     int y = getcury(game);
+    if (keyname(key)[1] == 'D') {
+        printw("%s", keyname(key));
+        endwin();
+        return false;
+    }
     wrefresh(game);
     switch (key) {
-        case 2:
-            y++;
-            break;
-        case 3:
+        case 'A':
             y--;
             break;
-        case 4:
-            x--;
+        case 'B':
+            y++;
             break;
-        case 5:
+        case 'C':
             x++;
             break;
-        case 113:
-            endwin();
+        case 'D':
+            x--;
+            break;
         default:
             break;
     }
@@ -27,27 +30,35 @@ void handleCursorMovement(chtype key, WINDOW* game) {
         wmove(game, y, x);
     }
     wrefresh(game);
+    return true;
 }
 
-void askPlayerForMove(uint32_t player, gamma_t* gamma, WINDOW* game) {
+bool askPlayerForMove(uint32_t player, gamma_t* gamma, WINDOW* game) {
     char ch;
-    while (true) {
-        if ((ch = getch()) != ERR) {
-            if (ch == 'G' && gamma_golden_move(gamma, player, game->_curx - 1, game->_cury - 1)) {
-                waddch(game, '0' + player);
-                wrefresh(game);
-                break;
+    bool moveMade = false;
+    while (!moveMade) {
+        ch = getch();
+        if (ch == 'G' && gamma_golden_move(gamma, player, game->_curx - 1, game->_cury - 1)) {
+            int cursor_x = game->_curx;
+            int cursor_y = game->_cury;
+            waddch(game, '0' + player);
+            wmove(game,cursor_y,cursor_x);
+            wrefresh(game);
+            moveMade = true;
+        } else if (ch == 'M' && gamma_move(gamma, player, game->_curx - 1, game->_cury - 1)) {
+            int cursor_x = game->_curx;
+            int cursor_y = game->_cury;
+            waddch(game, '0' + player);
+            wmove(game,cursor_y,cursor_x);
+            wrefresh(game);
+            moveMade = true;
+        } else {
+            if(!handleCursorMovement(ch, game)){
+                return false;
             }
-            if (ch == 'M' && gamma_move(gamma, player, game->_curx - 1, game->_cury - 1)) {
-                waddch(game, '0' + player);
-                wrefresh(game);
-                break;
-            }
-            handleCursorMovement(ch, game);
         }
     }
-
-
+    return true;
 }
 
 int getNextPlayer(int currentPlayer, gamma_t* gamma, uint32_t numberOfPlayers) {
@@ -66,8 +77,6 @@ void run_interactive_mode(State state) {
     initscr();
     cbreak();
     noecho();
-    nodelay(stdscr, TRUE);
-    keypad(stdscr, TRUE);
 
     WINDOW* game = newwin((int) state->gamma_h + 2, (int) state->gamma_w + 2, state->gamma_h, 0);
     WINDOW* status = newwin(5, 21, 0, 0);
@@ -90,12 +99,16 @@ void run_interactive_mode(State state) {
         wrefresh(status);
         wrefresh(game);
 
-        askPlayerForMove(player, state->gamma, game);
+        if (!askPlayerForMove(player, state->gamma, game)) {
+            break;
+        }
         player = getNextPlayer(player, state->gamma, state->players);
         if (player == -1) {
             break;
         }
     }
-    endwin();
+    if (!isendwin()) {
+        endwin();
+    }
 }
 
