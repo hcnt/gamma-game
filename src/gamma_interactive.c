@@ -1,4 +1,5 @@
 #include <ncurses.h>
+#include <curses.h>
 #include "gamma_interactive.h"
 
 bool handleCursorMovement(char key, WINDOW* game) {
@@ -42,18 +43,18 @@ bool askPlayerForMove(uint32_t player, gamma_t* gamma, WINDOW* game) {
             int cursor_x = game->_curx;
             int cursor_y = game->_cury;
             waddch(game, '0' + player);
-            wmove(game,cursor_y,cursor_x);
+            wmove(game, cursor_y, cursor_x);
             wrefresh(game);
             moveMade = true;
         } else if (ch == 'M' && gamma_move(gamma, player, game->_curx - 1, game->_cury - 1)) {
             int cursor_x = game->_curx;
             int cursor_y = game->_cury;
             waddch(game, '0' + player);
-            wmove(game,cursor_y,cursor_x);
+            wmove(game, cursor_y, cursor_x);
             wrefresh(game);
             moveMade = true;
         } else {
-            if(!handleCursorMovement(ch, game)){
+            if (!handleCursorMovement(ch, game)) {
                 return false;
             }
         }
@@ -110,5 +111,6 @@ void run_interactive_mode(State state) {
     if (!isendwin()) {
         endwin();
     }
+    _nc_free_and_exit();
 }
 
