@@ -3,6 +3,7 @@
  */
 #include "gamma_struct.h"
 #include <stdlib.h>
+#include <lzma.h>
 
 /**
   * @brief Gamma game struct.
@@ -34,7 +35,7 @@ static void merge(gamma_t* g, uint32_t x, uint32_t y) {
     get_neighbours(g->b, x, y, neighbours_x, neighbours_y, neighbours_player, neighbours_exists);
     for (int i = 0; i < 4; i++) {
         if (neighbours_exists[i] && neighbours_player[i] == get_player(g->b, x, y) &&
-            union_operation(g->b, x, y,neighbours_x[i],neighbours_y[i])) {
+            union_operation(g->b, x, y, neighbours_x[i], neighbours_y[i])) {
             merged_areas++;
         }
     }
@@ -89,16 +90,19 @@ static void update_edges(gamma_t* g, uint32_t player, uint32_t x, uint32_t y, bo
 gamma_t* create_gamma(uint32_t width, uint32_t height,
                       uint32_t players, uint32_t areas) {
     gamma_t* game = malloc(sizeof(struct gamma));
+    if (game == NULL) {
+        return NULL;
+    }
     game->width = width;
     game->height = height;
     game->number_of_players = players;
     game->max_areas = areas;
     game->b = create_board(width, height);
-    if(game->b == NULL){
+    if (game->b == NULL) {
         return NULL;
     }
     game->players = malloc(players * sizeof(player));
-    if(game->players == NULL){
+    if (game->players == NULL) {
         free(game->b);
         return NULL;
     }
@@ -162,7 +166,7 @@ uint64_t get_number_of_pawns(gamma_t* g) {
 }
 
 uint64_t get_number_of_free_fields(gamma_t* g) {
-    return get_width(g) * get_height(g) - get_number_of_pawns(g);
+    return (uint64_t) get_width(g) * (uint64_t) get_height(g) - get_number_of_pawns(g);
 }
 
 void set_player_done_golden_move(gamma_t* g, uint32_t player) {

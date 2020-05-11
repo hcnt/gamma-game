@@ -136,5 +136,8 @@ uint64_t gamma_free_fields(gamma_t* g, uint32_t player) {
 }
 
 char* gamma_board(gamma_t* g) {
+    if(g == NULL){
+        return NULL;
+    }
     return print_board(g);
 }

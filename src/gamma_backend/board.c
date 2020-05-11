@@ -23,9 +23,12 @@ struct board {
 //-------------- INIT AND DELETE-----------------
 board_t create_board(uint32_t width, uint32_t height) {
     board_t board = malloc(sizeof(struct board));
+    if (board == NULL) {
+        return NULL;
+    }
     board->width = width;
     board->height = height;
-    uint64_t array_length = height * width;
+    uint64_t array_length = (uint64_t) height * (uint64_t) width;
     board->fields = calloc(array_length, sizeof(uint64_t));
     if (board->fields == NULL) {
         return NULL;
