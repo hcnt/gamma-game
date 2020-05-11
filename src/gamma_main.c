@@ -59,19 +59,20 @@ bool checkIfStringHasOnlyWhiteChars(const char* string) {
     return true;
 }
 
-void parseGammaArgs(State state) {
+bool parseGammaArgs(State state) {
     char* stringLeftToParse;
     bool errorFlag = false;
-    uint32_t w = parse32bitInt(state->buffer + 1, &stringLeftToParse, &errorFlag);
+    uint32_t w = parse32bitInt(state->buffer + 2, &stringLeftToParse, &errorFlag);
     uint32_t h = parse32bitInt(stringLeftToParse, &stringLeftToParse, &errorFlag);
     uint32_t players = parse32bitInt(stringLeftToParse, &stringLeftToParse, &errorFlag);
     uint32_t areas = parse32bitInt(stringLeftToParse, &stringLeftToParse, &errorFlag);
     if (errorFlag || !checkIfStringHasOnlyWhiteChars(stringLeftToParse)) {
-        return;
+        return false;
     }
     state->gamma_h = h;
     state->gamma_w = w;
     state->gamma = gamma_new(w, h, players, areas);
+    return true;
 }
 
 void handleMove(State state) {
@@ -94,7 +95,7 @@ void handleMove(State state) {
 void handlePlayerProperty(State state) {
     char* stringLeftToParse;
     bool errorFlag = false;
-    uint32_t player = parse32bitInt(state->buffer + 1, &stringLeftToParse, &errorFlag);
+    uint32_t player = parse32bitInt(state->buffer + 2, &stringLeftToParse, &errorFlag);
     if (errorFlag || !checkIfStringHasOnlyWhiteChars(stringLeftToParse)) {
         error(state->line);
         return;
@@ -132,12 +133,12 @@ void parseLineWhileChoosingMode(State state) {
         error(state->line);
         return;
     }
-    if(state->buffer[0] == 'B') {
+    if (state->buffer[0] == 'B') {
         state->mode = BATCH_MODE;
     }
     opCompleted(state->line);
-    if(state->buffer[0] == 'I'){
-        run_interactive_mode(state->gamma);
+    if (state->buffer[0] == 'I') {
+        run_interactive_mode(state);
     }
 }
 
@@ -147,6 +148,10 @@ void parseLineInBatchMode(State state) {
     if (op == 'm' || op == 'g') {
         handleMove(state);
     } else if (op == 'b' || op == 'f' || op == 'q') {
+        if (state->num_chars == 1 || !isspace(state->buffer[1])) {
+            error(state->line);
+            return;
+        }
         handlePlayerProperty(state);
     } else if (op == 'p') {
         handleBoardPrint(state);
@@ -157,12 +162,14 @@ void parseLineInBatchMode(State state) {
 }
 
 void parseLine(State state) {
-    int num_chars = getline(&(state->buffer), &(state->buffer_size), stdin);
-    if (num_chars <= 0) {
+    state->num_chars = getline(&(state->buffer), &(state->buffer_size), stdin);
+//    printf("%d\n", num_chars);
+//    printf("%s", state->buffer);
+    if (state->num_chars <= 0) {
         state->eof = true;
         return;
     }
-    if (state->buffer[0] == '#' || checkIfStringHasOnlyWhiteChars(state->buffer)) {
+    if (state->buffer[0] == '#' || state->buffer[0] == '\n') {
         state->line++;
         return;
     }
@@ -192,15 +199,15 @@ int main() {
     state->buffer_size = BUFFER_START_SIZE;
     state->eof = false;
 
-    state->gamma = gamma_new(5,5,10,5);
-    state->gamma_h = 5;
-    state->gamma_w = 5;
-    state->players = 10;
-    run_interactive_mode(state);
-    gamma_delete(state->gamma);
-    free(state->buffer);
-    free(state);
-    return 0;
+//    state->gamma = gamma_new(5,5,10,5);
+//    state->gamma_h = 5;
+//    state->gamma_w = 5;
+//    state->players = 10;
+//    run_interactive_mode(state);
+//    gamma_delete(state->gamma);
+//    free(state->buffer);
+//    free(state);
+//    return 0;
     while (!state->eof) {
         parseLine(state);
     }

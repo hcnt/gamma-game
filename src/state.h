@@ -18,6 +18,7 @@ struct state {
     int line;
     size_t buffer_size;
     char* buffer;
+    int num_chars;
     bool eof;
 };
 typedef struct state* State;
