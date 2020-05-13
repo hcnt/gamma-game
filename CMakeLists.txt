@@ -13,11 +13,11 @@ set_property(GLOBAL PROPERTY RULE_MESSAGES OFF)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # Ustawiamy wspólne opcje kompilowania dla wszystkich wariantów projektu.
-set(CMAKE_C_FLAGS "-std=c11 -Wall -Wextra -lncurses")
+set(CMAKE_C_FLAGS "-std=c11 -Wall -Wextra")
 # Domyślne opcje dla wariantów Release i Debug są sensowne.
 # Jeśli to konieczne, ustawiamy tu inne.
 #set(CMAKE_C_FLAGS_RELEASE "-O3 -std=c11 -Wall -Wextra")
-#set(CMAKE_C_FLAGS_DEBUG "-g")
+set(CMAKE_C_FLAGS_DEBUG "-O3 -g")
 
 set(SOURCE_FILES_BACKEND
         src/gamma_backend/gamma.c
@@ -39,6 +39,7 @@ set(SOURCE_FILES_PART2
 # Wskazujemy plik wykonywalny.
 add_executable(gamma ${SOURCE_FILES_PART2} ${SOURCE_FILES_BACKEND})
 add_executable(gamma_backend_test ${SOURCE_FILES_BACKEND} src/gamma_backend/gamma_test.c)
+add_executable(gamma_interactive src/gamma_interactive.c)
 
 # Dodajemy obsługę Doxygena: sprawdzamy, czy jest zainstalowany i jeśli tak to:
 find_package(Doxygen)
@@ -54,33 +55,33 @@ if (DOXYGEN_FOUND)
             )
 endif (DOXYGEN_FOUND)
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    message("debug mode")
-    set(CMAKE_C_FLAGS_DEBUG "-O3 -g -I ${CMAKE_CURRENT_SOURCE_DIR}/src/")
-
-    #    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/debug/bin )
-    enable_testing()
-    file(GLOB_RECURSE files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "tests/*.c")
-
-    set(CTEST_PARALLEL_LEVEL 4)
-    set(SOURCE_FILES_TESTING
-            src/gamma_backend/gamma.c
-            src/gamma_backend/gamma.h
-            src/gamma_backend/player.h
-            src/gamma_backend/gamma_struct.h
-            src/gamma_backend/vector.c
-            src/gamma_backend/vector.h
-            src/gamma_backend/gamma_struct.c
-            src/gamma_backend/board.h
-            src/gamma_backend/board.c)
-
-    add_library(source OBJECT ${SOURCE_FILES_TESTING})
-    foreach (file ${files})
-        string(REGEX REPLACE "(^.*/|\\.[^.]*$)" "" file_without_ext ${file})
-        string(REGEX REPLACE "tests/z2/|/[^/]*\\.c$" "" directory ${file})
-        add_executable(${file_without_ext} $<TARGET_OBJECTS:source> ${file})
-        add_test(${file_without_ext} ${file_without_ext})
-        set_tests_properties(${file_without_ext} PROPERTIES LABELS "${directory}")
-
-    endforeach ()
-endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
+#if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+#    message("debug mode")
+#    set(CMAKE_C_FLAGS_DEBUG "-O3 -g -I ${CMAKE_CURRENT_SOURCE_DIR}/src/")
+#
+#    #    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/debug/bin )
+#    enable_testing()
+#    file(GLOB_RECURSE files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "tests/*.c")
+#
+#    set(CTEST_PARALLEL_LEVEL 4)
+#    set(SOURCE_FILES_TESTING
+#            src/gamma_backend/gamma.c
+#            src/gamma_backend/gamma.h
+#            src/gamma_backend/player.h
+#            src/gamma_backend/gamma_struct.h
+#            src/gamma_backend/vector.c
+#            src/gamma_backend/vector.h
+#            src/gamma_backend/gamma_struct.c
+#            src/gamma_backend/board.h
+#            src/gamma_backend/board.c)
+#
+#    add_library(source OBJECT ${SOURCE_FILES_TESTING})
+#    foreach (file ${files})
+#        string(REGEX REPLACE "(^.*/|\\.[^.]*$)" "" file_without_ext ${file})
+#        string(REGEX REPLACE "tests/z2/|/[^/]*\\.c$" "" directory ${file})
+#        add_executable(${file_without_ext} $<TARGET_OBJECTS:source> ${file})
+#        add_test(${file_without_ext} ${file_without_ext})
+#        set_tests_properties(${file_without_ext} PROPERTIES LABELS "${directory}")
+#
+#    endforeach ()
+#endif (CMAKE_BUILD_TYPE STREQUAL "Debug")

@@ -1,65 +1,66 @@
-#include <ncurses.h>
-#include <curses.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <termios.h>
 #include "gamma_interactive.h"
+#include <stdlib.h>
+#include <assert.h>
 
-bool handleCursorMovement(char key, WINDOW* game) {
-    int x = getcurx(game);
-    int y = getcury(game);
-    if (keyname(key)[1] == 'D') {
-        printw("%s", keyname(key));
-        endwin();
+
+bool checkforArrowInput(char* c) {
+    *c = (char) getchar();
+    if (*c != '[') {
         return false;
     }
-    wrefresh(game);
-    switch (key) {
+    *c = (char) getchar();
+    if (*c == 'A' || *c == 'B' || *c == 'C' || *c == 'D') {
+        return true;
+    } else {
+        return false;
+    }
+
+}
+
+bool handle_cursor_movement(char ch, uint32_t* cursor_x, uint32_t* cursor_y, State state) {
+    uint32_t x = *cursor_x;
+    uint32_t y = *cursor_y;
+    switch (ch) {
         case 'A':
+            if (y == 0)
+                return true;
             y--;
             break;
         case 'B':
+            if (y == state->gamma_h - 1)
+                return true;
             y++;
             break;
         case 'C':
+            if (x == state->gamma_w - 1)
+                return true;
             x++;
             break;
         case 'D':
+            if (x == 0)
+                return true;
             x--;
             break;
         default:
-            break;
+            assert(false);
     }
-    if (x > 0 && y > 0 && x < game->_maxx && y < game->_maxy) {
-        wmove(game, y, x);
-    }
-    wrefresh(game);
+    *cursor_x = x;
+    *cursor_y = y;
     return true;
 }
-
-bool askPlayerForMove(uint32_t player, gamma_t* gamma, WINDOW* game) {
-    char ch;
-    bool moveMade = false;
-    while (!moveMade) {
-        ch = getch();
-        if (ch == 'G' && gamma_golden_move(gamma, player, game->_curx - 1, game->_cury - 1)) {
-            int cursor_x = game->_curx;
-            int cursor_y = game->_cury;
-            waddch(game, '0' + player);
-            wmove(game, cursor_y, cursor_x);
-            wrefresh(game);
-            moveMade = true;
-        } else if (ch == 'M' && gamma_move(gamma, player, game->_curx - 1, game->_cury - 1)) {
-            int cursor_x = game->_curx;
-            int cursor_y = game->_cury;
-            waddch(game, '0' + player);
-            wmove(game, cursor_y, cursor_x);
-            wrefresh(game);
-            moveMade = true;
-        } else {
-            if (!handleCursorMovement(ch, game)) {
-                return false;
-            }
-        }
+//
+bool handle_move(char ch, uint32_t player, uint32_t x, uint32_t y, gamma_t* gamma) {
+    if ((ch == 'G' || ch == 'g') && gamma_golden_move(gamma, player, x, y)) {
+        return true;
+    } else if (ch == ' ' && gamma_move(gamma, player, x, y)) {
+        return true;
+    } else if (ch == 'C' || ch == 'c') {
+        return true;
     }
-    return true;
+    return false;
 }
 
 int getNextPlayer(int currentPlayer, gamma_t* gamma, uint32_t numberOfPlayers) {
@@ -73,44 +74,89 @@ int getNextPlayer(int currentPlayer, gamma_t* gamma, uint32_t numberOfPlayers) {
     return -1;
 }
 
-void run_interactive_mode(State state) {
-    clear();
-    initscr();
-    cbreak();
-    noecho();
-
-    WINDOW* game = newwin((int) state->gamma_h + 2, (int) state->gamma_w + 2, state->gamma_h, 0);
-    WINDOW* status = newwin(5, 21, 0, 0);
-    wborder(game, 0, 0, 0, 0, 0, 0, 0, 0);
-    wborder(status, 0, 0, 0, 0, 0, 0, 0, 0);
-    wmove(game, 1, 1);
-    refresh();
-
-    int player = 1;
-    int cursor_x;
-    int cursor_y;
-    while (true) {
-        cursor_x = getcurx(game);
-        cursor_y = getcury(game);
-
-        mvwprintw(status, 1, 1, "Player: %d ", player);
-        mvwprintw(status, 2, 1, "Free Fields: %d ", gamma_free_fields(state->gamma, player));
-        mvwprintw(status, 3, 1, "Golden Possible: %d ", gamma_golden_possible(state->gamma, player));
-        wmove(game, cursor_y, cursor_x);
-        wrefresh(status);
-        wrefresh(game);
-
-        if (!askPlayerForMove(player, state->gamma, game)) {
-            break;
-        }
-        player = getNextPlayer(player, state->gamma, state->players);
-        if (player == -1) {
-            break;
-        }
-    }
-    if (!isendwin()) {
-        endwin();
-    }
-    _nc_free_and_exit();
+void clear() {
+    write(STDOUT_FILENO, "\x1b[2J", 4);
+    write(STDOUT_FILENO, "\x1b[H", 3);
 }
 
+void printBoard(State state, uint32_t current_player, uint32_t cursor_x, uint32_t cursor_y, bool onlyBoard) {
+    char* board = gamma_board(state->gamma);
+    for (uint32_t i = 0; i < state->gamma_h; i++) {
+        for (uint32_t j = 0; j < state->gamma_w; j++) {
+            if (!onlyBoard && cursor_x == j && cursor_y == i) {
+                printf("\x1b[30;47m");
+            }
+            printf("%c", board[(state->gamma_w + 1) * i + j]);
+            printf("\x1b[0m");
+        }
+        printf("\n");
+    }
+    if (!onlyBoard) {
+        printf("Player: %d\n", current_player);
+        printf("Free Fields: %lu\n", gamma_free_fields(state->gamma, current_player));
+        printf("Golden Possible: %d\n", gamma_golden_possible(state->gamma, current_player));
+    }
+    free(board);
+}
+
+
+void run_interactive_mode(State state) {
+    //setup terminal
+    struct termios starting_terminal;
+    tcgetattr(STDIN_FILENO, &starting_terminal);
+    struct termios term = starting_terminal;
+    term.c_lflag &= ~(ECHO | ICANON);
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &term);
+
+    printf("\x1b[?25l"); //hide cursor
+    clear();
+
+    uint32_t cursor_x = 0;
+    uint32_t cursor_y = 0;
+    int player = 1;
+
+    bool skipReadFlag = false;
+    printBoard(state, player, cursor_x, cursor_y, false);
+    char c;
+    while (skipReadFlag || ((c = (char) getchar()) && c != 4)) {
+        skipReadFlag = false;
+        clear();
+        printBoard(state, player, cursor_x, cursor_y, false);
+
+        if (c == ' ' || c == 'G' || c == 'g' || c == 'c' || c == 'C') {
+            if (handle_move(c, player, cursor_x, state->gamma_h - cursor_y - 1, state->gamma)) {
+                player = getNextPlayer(player, state->gamma, state->players);
+                if (player == -1) {
+                    break;
+                }
+            }
+        } else if (c == 27) {
+            if (checkforArrowInput(&c)) {
+                handle_cursor_movement(c, &cursor_x, &cursor_y, state);
+            } else {
+                skipReadFlag = true;
+                if (c == 4) {
+                    break;
+                }
+            }
+        }
+        clear();
+        printBoard(state, player, cursor_x, cursor_y, false);
+    }
+
+    if (player == -1) {
+        clear();
+        printf("Final board state:\n\n");
+        printBoard(state, player, cursor_x, cursor_y, true);
+        printf("\nScore:\n");
+        for (uint32_t i = 1; i <= state->players; i++) {
+            printf("Player %u: %lu \n", i, gamma_busy_fields(state->gamma, i));
+        }
+    }
+
+    //clean terminal
+//    printf("XDDDDDDD");
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &starting_terminal);
+    printf("\x1b[?25h"); //show cursor
+    fflush(stdout);
+}

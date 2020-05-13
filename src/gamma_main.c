@@ -71,6 +71,7 @@ bool parseGammaArgs(State state) {
     }
     state->gamma_h = h;
     state->gamma_w = w;
+    state->players = players;
     state->gamma = gamma_new(w, h, players, areas);
     return true;
 }
@@ -139,6 +140,7 @@ void parseLineWhileChoosingMode(State state) {
     opCompleted(state->line);
     if (state->buffer[0] == 'I') {
         run_interactive_mode(state);
+        state->eof = true;
     }
 }
 
@@ -199,10 +201,10 @@ int main() {
     state->buffer_size = BUFFER_START_SIZE;
     state->eof = false;
 
-//    state->gamma = gamma_new(5,5,10,5);
+//    state->gamma = gamma_new(5,5,3,5);
 //    state->gamma_h = 5;
 //    state->gamma_w = 5;
-//    state->players = 10;
+//    state->players = 3;
 //    run_interactive_mode(state);
 //    gamma_delete(state->gamma);
 //    free(state->buffer);
