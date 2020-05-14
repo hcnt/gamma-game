@@ -1,17 +1,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-
-inline void error(int line) {
-    fprintf(stderr, "ERROR %d\n", line);
-}
-
-inline void opCompleted(int line) {
-    printf("OK %d\n", line);
-}
+#include "gamma_utils.h"
 
 uint32_t parse32bitInt(char* string, char** stringLeftToParse, bool* errorFlag) {
     errno = 0;

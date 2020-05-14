@@ -34,12 +34,11 @@ set(SOURCE_FILES_BACKEND
 set(SOURCE_FILES_PART2
         src/gamma_main.c
         src/gamma_interactive.c
-        src/state.h)
+        src/state.h src/batch_mode.c src/batch_mode.h src/gamma_utils.c src/batch_mode.c src/batch_mode.h src/gamma_utils.h)
 
 # Wskazujemy plik wykonywalny.
 add_executable(gamma ${SOURCE_FILES_PART2} ${SOURCE_FILES_BACKEND})
 add_executable(gamma_backend_test ${SOURCE_FILES_BACKEND} src/gamma_backend/gamma_test.c)
-add_executable(gamma_interactive src/gamma_interactive.c)
 
 # Dodajemy obsługę Doxygena: sprawdzamy, czy jest zainstalowany i jeśli tak to:
 find_package(Doxygen)
