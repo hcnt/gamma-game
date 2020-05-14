@@ -1,0 +1,43 @@
+#include <ctype.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+
+inline void error(int line) {
+    fprintf(stderr, "ERROR %d\n", line);
+}
+
+inline void opCompleted(int line) {
+    printf("OK %d\n", line);
+}
+
+uint32_t parse32bitInt(char* string, char** stringLeftToParse, bool* errorFlag) {
+    errno = 0;
+    unsigned long n = strtoul(string, stringLeftToParse, 10);
+    if (!isspace((*stringLeftToParse)[0])) {
+        *errorFlag = true;
+        return 0;
+    }
+    if (errno == EINVAL || errno == ERANGE || string == *stringLeftToParse) {
+        *errorFlag = true;
+        return 0;
+    }
+    if (n > UINT32_MAX) {
+        *errorFlag = true;
+        return 0;
+    }
+    return n;
+}
+
+bool checkIfStringHasOnlyWhiteChars(const char* string) {
+    int i = 0;
+    while (string[i] != '\0') {
+        if (!isspace(string[i])) {
+            return false;
+        }
+        i++;
+    }
+    return true;
+}
