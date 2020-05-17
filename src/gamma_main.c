@@ -66,6 +66,8 @@ void parseLine(State state) {
         state->eof = true;
         return;
     }
+
+    //check for comment or empty line
     if (state->buffer[0] == '#' || state->buffer[0] == '\n') {
         state->line++;
         return;
