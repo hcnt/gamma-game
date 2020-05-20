@@ -3,7 +3,6 @@
  */
 #include "gamma_struct.h"
 #include <stdlib.h>
-#include <lzma.h>
 
 /**
   * @brief Gamma game struct.
@@ -187,6 +186,18 @@ void remove_pawn(gamma_t* g, uint32_t x, uint32_t y) {
     set_player(g->b, 0, x, y);
 }
 
+bool can_pawn_be_removed(gamma_t* g, uint32_t x, uint32_t y) {
+    uint32_t p = get_player_at_position(g, x, y);
+    if (get_number_of_players_areas(g, p) < get_max_areas(g) - 1) {
+        return true;
+    }
+    if (get_number_of_players_areas(g, p) < get_max_areas(g)) {
+        if (number_of_neighbours_taken_by_player(g, p, x, y) == 3){
+        }
+    }
+    return !is_cut_vertex(g->b, x, y);
+}
+
 int number_of_neighbours_taken_by_player(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
     uint32_t neighbours_x[4];
     uint32_t neighbours_y[4];
@@ -224,7 +235,7 @@ void update_areas(gamma_t* g) {
     for (uint32_t i = 0; i < g->width; i++) {
         for (uint32_t j = 0; j < g->height; j++) {
             player = get_player(g->b, i, j);
-            if (player != 0 && !was_added_to_area(g->b, i, j)) {
+            if (player != 0 && !was_visited_in_dfs(g->b, i, j)) {
                 g->players[player - 1].areas++;
                 create_area(g->b, i, j);
             }
@@ -233,6 +244,12 @@ void update_areas(gamma_t* g) {
 }
 
 
+void update_cut_points(gamma_t* g) {
+    reset_cut_vertices(g->b);
+    calculate_cut_vertices(g->b);
+}
+
 char* print_board(gamma_t* g) {
     return get_board(g->b);
 }
+

@@ -31,3 +31,11 @@ bool checkIfStringHasOnlyWhiteChars(const char* string) {
     }
     return true;
 }
+
+void opCompleted(int line) {
+    printf("OK %d\n", line);
+};
+
+void error(int line) {
+    fprintf(stderr, "ERROR %d\n", line);
+};

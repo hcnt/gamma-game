@@ -14,17 +14,13 @@
  * Prints message about successful operation
  * @param line - line where operation was defined
  */
-inline void opCompleted(int line) {
-    printf("OK %d\n", line);
-};
+void opCompleted(int line);
 
 /**
  * Prints message about unsuccessful operation
  * @param line - line where operation was defined
  */
-inline void error(int line) {
-    fprintf(stderr, "ERROR %d\n", line);
-};
+void error(int line);
 
 /**
  * checks if string has only white characters

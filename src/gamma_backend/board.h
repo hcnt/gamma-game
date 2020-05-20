@@ -76,13 +76,26 @@ void get_neighbours(board_t b, uint32_t x, uint32_t y,
  */
 //@{
 /**
+ * checks if removing vertex splits areas
+ * @param b
+ * @param x
+ * @param y
+ * @return
+ */
+bool is_cut_vertex(board_t b, uint32_t x, uint32_t y);
+
+void calculate_cut_vertices(board_t b);
+
+void reset_cut_vertices(board_t b);
+
+/**
  * Checks if field at (x,y) was already added to area
  * @param[in] b
  * @param[in] x
  * @param[in] y
  * @return
  */
-bool was_added_to_area(board_t b, uint32_t x, uint32_t y);
+bool was_visited_in_dfs(board_t b, uint32_t x, uint32_t y);
 
 /**
  * @brief Clean structure of areas on the board

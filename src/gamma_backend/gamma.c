@@ -14,14 +14,14 @@
  * @return true if parameters are valid, false otherwise
  */
 static bool are_gamma_new_parameters_valid(uint32_t width, uint32_t height,
-                                           uint32_t players,uint32_t areas) {
+                                           uint32_t players, uint32_t areas) {
     return width > 0 && height > 0 && players > 0 && areas > 0;
 }
 
 gamma_t* gamma_new(uint32_t width, uint32_t height,
                    uint32_t players, uint32_t areas) {
 
-    if (!are_gamma_new_parameters_valid(width, height, players,areas)) {
+    if (!are_gamma_new_parameters_valid(width, height, players, areas)) {
         return NULL;
     }
     return create_gamma(width, height, players, areas);
@@ -32,6 +32,7 @@ void gamma_delete(gamma_t* g) {
         delete_gamma(g);
     }
 }
+
 /**
  * @brief checks if parameters given to gamma_move are valid
  * @param[in] g
@@ -119,7 +120,30 @@ bool gamma_golden_possible(gamma_t* g, uint32_t player) {
     if (get_number_of_pawns(g) - get_number_of_players_pawns(g, player) == 0) {
         return false;
     }
-    return true;
+    if (get_number_of_players_areas(g, player) != get_max_areas(g)) {
+        return true;
+    }
+
+//    update_cut_points(g);
+//    update_areas(g);
+    //check if there exists at least one golden move that isn't illegal
+    for (uint32_t i = 0; i < get_width(g); i++) {
+        for (uint32_t j = 0; j < get_height(g); j++) {
+            uint32_t p = get_player_at_position(g, i, j);
+            if (p != 0 && p != player && number_of_neighbours_taken_by_player(g, player, i, j) != 0) {
+                remove_pawn(g, i, j);
+                update_areas(g);
+                if (get_number_of_players_areas(g, p) <= get_max_areas(g)) {
+                    add_pawn(g, p, i, j);
+                    update_areas(g);
+                    return true;
+                }
+                add_pawn(g, p, i, j);
+                update_areas(g);
+            }
+        }
+    }
+    return false;
 }
 
 uint64_t gamma_free_fields(gamma_t* g, uint32_t player) {
@@ -136,7 +160,7 @@ uint64_t gamma_free_fields(gamma_t* g, uint32_t player) {
 }
 
 char* gamma_board(gamma_t* g) {
-    if(g == NULL){
+    if (g == NULL) {
         return NULL;
     }
     return print_board(g);

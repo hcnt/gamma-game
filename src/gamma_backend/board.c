@@ -9,15 +9,26 @@
 #include "board.h"
 
 /**
+ * structure to store information about field
+ */
+typedef struct {
+    uint64_t player;///< what player is on this field, 0 if no one
+    bool dfs_visited;///< flag to check if field was already visited during dfs
+    uint64_t funion_parent;///<find & union tree parent
+    uint8_t funion_rank; ///< rank of node in find & union
+    bool is_cut_vertex; ///< stores if field is cut vertex (removing it would split area)
+    uint64_t dfs_low;
+    uint64_t dfs_parent;
+
+} field;
+
+/**
  * structure to store information about board
  */
 struct board {
     uint32_t width; ///< board width
     uint32_t height;///< board height
-    uint64_t* fields;///< array to store what player is on given field, 0 if no one
-    bool* dfs_visited;///< array of flags to check which fields were already visited during dfs
-    uint64_t* funion_parent;///<array to store find & union tree data
-    uint8_t* funion_rank; ///< array to store ranks ranks of nodes in find & union
+    field* fields;///< array to store field data
 };
 
 //-------------- INIT AND DELETE-----------------
@@ -29,39 +40,15 @@ board_t create_board(uint32_t width, uint32_t height) {
     board->width = width;
     board->height = height;
     uint64_t array_length = (uint64_t) height * (uint64_t) width;
-    board->fields = calloc(array_length, sizeof(uint64_t));
-    if (board->fields == NULL) {
-        return NULL;
-    }
-    board->dfs_visited = calloc(array_length, sizeof(bool));
-    if (board->dfs_visited == NULL) {
-        free(board->fields);
-        return NULL;
-    }
-    board->funion_rank = calloc(array_length, sizeof(uint64_t));
-    if (board->funion_rank == NULL) {
-        free(board->fields);
-        free(board->dfs_visited);
-        return NULL;
-    }
-    board->funion_parent = calloc(array_length, sizeof(uint64_t));
-    if (board->funion_parent == NULL) {
-        free(board->fields);
-        free(board->dfs_visited);
-        free(board->funion_rank);
-        return NULL;
-    }
+    board->fields = calloc(array_length, sizeof(field));
     for (uint64_t i = 0; i < array_length; i++) {
-        board->funion_parent[i] = i;
+        board->fields[i].funion_parent = i;
     }
     return board;
 }
 
 void delete_board(board_t b) {
-    free(b->funion_parent);
-    free(b->funion_rank);
     free(b->fields);
-    free(b->dfs_visited);
     free(b);
 }
 //-----------------------------------
@@ -70,15 +57,15 @@ uint64_t get_player(board_t b, uint32_t x, uint32_t y) {
     if (b->width * y + x >= b->height * b->width) {
         return 0;
     }
-    return b->fields[b->width * y + x];
+    return b->fields[b->width * y + x].player;
 }
 
 void set_player(board_t b, uint64_t player, uint32_t x, uint32_t y) {
-    b->fields[b->width * y + x] = player;
+    b->fields[b->width * y + x].player = player;
 }
 
-bool was_added_to_area(board_t b, uint32_t x, uint32_t y) {
-    return b->dfs_visited[b->width * y + x];
+bool was_visited_in_dfs(board_t b, uint32_t x, uint32_t y) {
+    return b->fields[b->width * y + x].dfs_visited;
 }
 
 void get_neighbours(board_t b, uint32_t x, uint32_t y,
@@ -114,14 +101,14 @@ void get_neighbours(board_t b, uint32_t x, uint32_t y,
  */
 static uint64_t find_root(board_t b, uint64_t field_index) {
     uint64_t root = field_index;
-    while (b->funion_parent[root] != root) {
-        root = b->funion_parent[root];
+    while (b->fields[root].funion_parent != root) {
+        root = b->fields[root].funion_parent;
     }
     uint64_t tmp = field_index;
     uint64_t parent;
-    while (b->funion_parent[tmp] != tmp) {
-        parent = b->funion_parent[tmp];
-        b->funion_parent[tmp] = root;
+    while (b->fields[tmp].funion_parent != tmp) {
+        parent = b->fields[tmp].funion_parent;
+        b->fields[tmp].funion_parent = root;
         tmp = parent;
     }
     return root;
@@ -138,13 +125,13 @@ bool union_operation(board_t b, uint32_t x1, uint32_t y1, uint32_t x2, __uint32_
     if (root1 == root2) {
         return false;
     }
-    if (b->funion_rank[root1] > b->funion_rank[root2]) {
-        b->funion_parent[root2] = root1;
-    } else if (b->funion_rank[root1] < b->funion_rank[root2]) {
-        b->funion_parent[root1] = root2;
+    if (b->fields[root1].funion_rank > b->fields[root2].funion_rank) {
+        b->fields[root2].funion_parent = root1;
+    } else if (b->fields[root1].funion_rank < b->fields[root2].funion_rank) {
+        b->fields[root1].funion_parent = root2;
     } else {
-        b->funion_parent[root1] = root2;
-        b->funion_rank[root2]++;
+        b->fields[root1].funion_parent = root2;
+        b->fields[root2].funion_rank++;
     }
 
     return true;
@@ -155,10 +142,10 @@ bool union_operation(board_t b, uint32_t x1, uint32_t y1, uint32_t x2, __uint32_
 void reset_all_areas(board_t b) {
     for (uint32_t i = 0; i < b->width; i++) {
         for (uint32_t j = 0; j < b->height; j++) {
-            b->dfs_visited[b->width * j + i] = false;
+            b->fields[b->width * j + i].dfs_visited = false;
             //set field parent to themselves
-            b->funion_parent[b->width * j + i] = b->width * j + i;
-            b->funion_rank[b->width * j + i] = 0;
+            b->fields[b->width * j + i].funion_parent = b->width * j + i;
+            b->fields[b->width * j + i].funion_rank = 0;
         }
     }
 }
@@ -166,9 +153,9 @@ void reset_all_areas(board_t b) {
 void create_area(board_t b, uint32_t x, uint32_t y) {
     if (get_player(b, x, y) == 0)
         return;
-    if (was_added_to_area(b, x, y))
+    if (was_visited_in_dfs(b, x, y))
         return;
-    b->dfs_visited[b->width * y + x] = true;
+    b->fields[b->width * y + x].dfs_visited = true;
 
     uint32_t neighbours_x[4];
     uint32_t neighbours_y[4];
@@ -178,11 +165,74 @@ void create_area(board_t b, uint32_t x, uint32_t y) {
     get_neighbours(b, x, y, neighbours_x, neighbours_y, neighbours_player, neighbours_exists);
     for (int i = 0; i < 4; i++) {
         if (neighbours_exists[i] && get_player(b, x, y) == neighbours_player[i] &&
-            !was_added_to_area(b, neighbours_x[i], neighbours_y[i])) {
+            !was_visited_in_dfs(b, neighbours_x[i], neighbours_y[i])) {
             union_operation(b, x, y, neighbours_x[i], neighbours_y[i]);
             create_area(b, neighbours_x[i], neighbours_y[i]);
         }
     }
+}
+
+//TODO fix this 64bit
+static inline void reset_dfs_visited(board_t b) {
+    for (uint64_t i = 0; i < (uint64_t) b->width * (uint64_t) b->height; i++) {
+        b->fields[i].dfs_visited = false;
+    }
+}
+
+static void find_cut_vertices(board_t b, uint32_t x, uint32_t y, bool is_root, uint64_t height) {
+    uint32_t neighbours_x[4];
+    uint32_t neighbours_y[4];
+    uint32_t neighbours_player[4];
+    bool neighbours_exists[4];
+    get_neighbours(b, x, y, neighbours_x, neighbours_y, neighbours_player, neighbours_exists);
+
+    b->fields[b->width * y + x].dfs_visited = true;
+    b->fields[b->width * y + x].dfs_low = height;
+
+    int children_num = 0;
+    for (int i = 0; i < 4; i++) {
+        if (!neighbours_exists[i] || get_player(b, x, y) != neighbours_player[i]) {
+            continue;
+        }
+        if (!was_visited_in_dfs(b, neighbours_x[i], neighbours_y[i])) {
+            children_num++;
+            b->fields[b->width * neighbours_y[i] + neighbours_x[i]].dfs_parent = b->width * y + x;
+
+            find_cut_vertices(b, neighbours_x[i], neighbours_y[i], false, height + 1);
+        } else if (b->fields[b->width * y + x].dfs_parent != b->width * neighbours_y[i] + neighbours_x[i] &&
+                   b->fields[b->width * neighbours_y[i] + neighbours_x[i]].dfs_low <
+                   b->fields[b->width * y + x].dfs_low) {
+            b->fields[b->width * y + x].dfs_low = b->fields[b->width * neighbours_y[i] + neighbours_x[i]].dfs_low;
+        }
+    }
+    if ((is_root && children_num >= 2) ||
+        (!is_root && children_num > 0 && b->fields[b->width * y + x].dfs_low == height)) {
+        b->fields[b->width * y + x].is_cut_vertex = true;
+    }
+}
+
+void calculate_cut_vertices(board_t b) {
+    reset_dfs_visited(b);
+    for (uint32_t i = 0; i < b->width; i++) {
+        for (uint32_t j = 0; j < b->height; j++) {
+            if (!b->fields[b->width * j + i].dfs_visited &&
+                b->fields[b->width * j + i].player != 0) {
+                find_cut_vertices(b, i, j, true, 0);
+            }
+        }
+    }
+}
+
+bool is_cut_vertex(board_t b, uint32_t x, uint32_t y) {
+    return b->fields[b->width * y + x].is_cut_vertex;
+}
+
+
+void reset_cut_vertices(board_t b) {
+    for (uint64_t i = 0; i < (uint64_t) b->width * (uint64_t) b->height; i++) {
+        b->fields[i].is_cut_vertex = false;
+    }
+
 }
 
 //------------PRINTING-------------------------------------
