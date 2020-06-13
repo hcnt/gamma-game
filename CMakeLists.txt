@@ -40,6 +40,8 @@ set(SOURCE_FILES_PART2
 # Wskazujemy plik wykonywalny.
 add_executable(gamma ${SOURCE_FILES_PART2} ${SOURCE_FILES_BACKEND})
 add_executable(test ${SOURCE_FILES_BACKEND} src/gamma_backend/gamma_test.c)
+set_target_properties(test PROPERTIES OUTPUT_NAME gamma_test)
+
 
 # Dodajemy obsługę Doxygena: sprawdzamy, czy jest zainstalowany i jeśli tak to:
 find_package(Doxygen)
