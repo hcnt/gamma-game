@@ -177,6 +177,7 @@ static inline void setup_terminal(struct termios* original_terminal) {
     struct termios term = *original_terminal;
     term.c_lflag &= ~(ECHO | ICANON);
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &term)) {
+        printf("ERROR\n");
         exit(1);
     }
     printf("\x1b[?25l"); //hide cursor
@@ -185,6 +186,7 @@ static inline void setup_terminal(struct termios* original_terminal) {
 
 static inline void reset_terminal(struct termios* original_terminal) {
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, original_terminal)) {
+        printf("ERROR\n");
         exit(1);
     }
     printf("\x1b[?25h"); //show cursor

@@ -51,8 +51,8 @@ void parseLineInStartMode(State state) {
     }
     if (state->buffer[0] == 'B') {
         state->mode = BATCH_MODE;
+        opCompleted(state->line);
     }
-    opCompleted(state->line);
     if (state->buffer[0] == 'I') {
         run_interactive_mode(state);
         state->eof = true;
