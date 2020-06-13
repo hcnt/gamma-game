@@ -252,13 +252,14 @@ void run_interactive_mode(State state) {
     //--------------------------------
 
     //------------game loop-----------
-
     //if while parsing arrow there is non matching char, e.g sequence "ESC, [ , G"
     //then skipReadFlag is set true and instead of getting next char from stdin,
     //character 'G' would be parsed
     while ((skipReadFlag && c != 4) || ((c = (char) getchar()) && c != 4)) {
         skipReadFlag = false;
-        interactive_loop_step(state, c, &cursor_x, &cursor_y, &player, &skipReadFlag);
+        if (!interactive_loop_step(state, c, &cursor_x, &cursor_y, &player, &skipReadFlag)) {
+            break;
+        }
     }
     //--------------------------------
 
