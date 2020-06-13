@@ -41,6 +41,10 @@ board_t create_board(uint32_t width, uint32_t height) {
     board->height = height;
     uint64_t array_length = (uint64_t) height * (uint64_t) width;
     board->fields = calloc(array_length, sizeof(field));
+    if (board->fields == NULL) {
+        free(board);
+        return NULL;
+    }
     for (uint64_t i = 0; i < array_length; i++) {
         board->fields[i].funion_parent = i;
     }
@@ -170,69 +174,6 @@ void create_area(board_t b, uint32_t x, uint32_t y) {
             create_area(b, neighbours_x[i], neighbours_y[i]);
         }
     }
-}
-
-//TODO fix this 64bit
-static inline void reset_dfs_visited(board_t b) {
-    for (uint64_t i = 0; i < (uint64_t) b->width * (uint64_t) b->height; i++) {
-        b->fields[i].dfs_visited = false;
-    }
-}
-
-static void find_cut_vertices(board_t b, uint32_t x, uint32_t y, bool is_root, uint64_t height) {
-    uint32_t neighbours_x[4];
-    uint32_t neighbours_y[4];
-    uint32_t neighbours_player[4];
-    bool neighbours_exists[4];
-    get_neighbours(b, x, y, neighbours_x, neighbours_y, neighbours_player, neighbours_exists);
-
-    b->fields[b->width * y + x].dfs_visited = true;
-    b->fields[b->width * y + x].dfs_low = height;
-
-    int children_num = 0;
-    for (int i = 0; i < 4; i++) {
-        if (!neighbours_exists[i] || get_player(b, x, y) != neighbours_player[i]) {
-            continue;
-        }
-        if (!was_visited_in_dfs(b, neighbours_x[i], neighbours_y[i])) {
-            children_num++;
-            b->fields[b->width * neighbours_y[i] + neighbours_x[i]].dfs_parent = b->width * y + x;
-
-            find_cut_vertices(b, neighbours_x[i], neighbours_y[i], false, height + 1);
-        } else if (b->fields[b->width * y + x].dfs_parent != b->width * neighbours_y[i] + neighbours_x[i] &&
-                   b->fields[b->width * neighbours_y[i] + neighbours_x[i]].dfs_low <
-                   b->fields[b->width * y + x].dfs_low) {
-            b->fields[b->width * y + x].dfs_low = b->fields[b->width * neighbours_y[i] + neighbours_x[i]].dfs_low;
-        }
-    }
-    if ((is_root && children_num >= 2) ||
-        (!is_root && children_num > 0 && b->fields[b->width * y + x].dfs_low == height)) {
-        b->fields[b->width * y + x].is_cut_vertex = true;
-    }
-}
-
-void calculate_cut_vertices(board_t b) {
-    reset_dfs_visited(b);
-    for (uint32_t i = 0; i < b->width; i++) {
-        for (uint32_t j = 0; j < b->height; j++) {
-            if (!b->fields[b->width * j + i].dfs_visited &&
-                b->fields[b->width * j + i].player != 0) {
-                find_cut_vertices(b, i, j, true, 0);
-            }
-        }
-    }
-}
-
-bool is_cut_vertex(board_t b, uint32_t x, uint32_t y) {
-    return b->fields[b->width * y + x].is_cut_vertex;
-}
-
-
-void reset_cut_vertices(board_t b) {
-    for (uint64_t i = 0; i < (uint64_t) b->width * (uint64_t) b->height; i++) {
-        b->fields[i].is_cut_vertex = false;
-    }
-
 }
 
 //------------PRINTING-------------------------------------

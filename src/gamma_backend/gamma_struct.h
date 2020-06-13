@@ -66,18 +66,6 @@ void update_areas(gamma_t* g);
  * @return
  */
 
-/**
- * for all points update if that point is cut point
- * @param g
- */
-void update_cut_points(gamma_t* g);
-/**
- * checks if pawn can be removed, requires running update_cut_points before
- * @param g
- * @return if pawn can be removed
- */
-bool can_pawn_be_removed(gamma_t* g, uint32_t x, uint32_t y);
-
 char* print_board(gamma_t* g);
 ///@}
 

@@ -186,18 +186,6 @@ void remove_pawn(gamma_t* g, uint32_t x, uint32_t y) {
     set_player(g->b, 0, x, y);
 }
 
-bool can_pawn_be_removed(gamma_t* g, uint32_t x, uint32_t y) {
-    uint32_t p = get_player_at_position(g, x, y);
-    if (get_number_of_players_areas(g, p) < get_max_areas(g) - 1) {
-        return true;
-    }
-    if (get_number_of_players_areas(g, p) < get_max_areas(g)) {
-        if (number_of_neighbours_taken_by_player(g, p, x, y) == 3){
-        }
-    }
-    return !is_cut_vertex(g->b, x, y);
-}
-
 int number_of_neighbours_taken_by_player(gamma_t* g, uint32_t player, uint32_t x, uint32_t y) {
     uint32_t neighbours_x[4];
     uint32_t neighbours_y[4];
@@ -241,12 +229,6 @@ void update_areas(gamma_t* g) {
             }
         }
     }
-}
-
-
-void update_cut_points(gamma_t* g) {
-    reset_cut_vertices(g->b);
-    calculate_cut_vertices(g->b);
 }
 
 char* print_board(gamma_t* g) {

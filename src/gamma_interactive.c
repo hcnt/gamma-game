@@ -5,7 +5,6 @@
 #include "gamma_utils.h"
 #include <stdlib.h>
 #include <assert.h>
-#include <math.h>
 
 
 //-----------OUTPUT-----------------
@@ -24,11 +23,17 @@ static inline int num_digits(uint32_t x) {
     return n;
 }
 
-static void print_board_cell(char* board, uint64_t* i, int padding) {
+static void print_board_cell(char* board, uint64_t* i, int padding, long long current_player) {
     int number_length = 0;
+    uint32_t player;
+
 
     //parse number bigger then 9
     if (board[*i] == '[') {
+        player = atoi(&board[*i + 1]);
+        if (current_player != -1 && player == current_player) {
+            printf("\x1b[45m");
+        }
         (*i)++;
         while (board[*i] != ']') {
             printf("%c", board[*i]);
@@ -36,9 +41,13 @@ static void print_board_cell(char* board, uint64_t* i, int padding) {
             number_length++;
         }
     } else {
+        if (current_player != -1 && board[*i] - '0' == current_player) {
+            printf("\x1b[45m");
+        }
         printf("%c", board[*i]);
         number_length = 1;
     }
+    printf("\x1b[0m");
 
     //apply padding
     for (int j = 0; j < padding - number_length; j++) {
@@ -47,9 +56,10 @@ static void print_board_cell(char* board, uint64_t* i, int padding) {
 }
 
 
-static void print_state_board(State state, uint32_t cursor_x, uint32_t cursor_y) {
+static void print_state_board(State state, uint32_t cursor_x, uint32_t cursor_y, long long current_player) {
     clear();
-    char* board = gamma_board(state->gamma);
+    gamma_t* gamma = state->gamma;
+    char* board = gamma_board(gamma);
     if (!board) {
         exit(1);
     }
@@ -71,7 +81,7 @@ static void print_state_board(State state, uint32_t cursor_x, uint32_t cursor_y)
         if (cursor_x == current_x_pos && cursor_y == current_y_pos) {
             printf("\x1b[30;47m");
         }
-        print_board_cell(board, &i, num_digits(state->players));
+        print_board_cell(board, &i, num_digits(state->players), current_player);
 
         printf("\x1b[0m");
         i++;
@@ -81,19 +91,23 @@ static void print_state_board(State state, uint32_t cursor_x, uint32_t cursor_y)
     free(board);
 }
 
-static void print_state_stats(State state, uint32_t current_player) {
+static void print_state_stats(State state, uint32_t current_player, bool wasMoveFailed) {
     printf("Player: %d\n", current_player);
     printf("Free Fields: %lu\n",
            gamma_free_fields(state->gamma, current_player));
     printf("Golden Possible: %d\n",
            gamma_golden_possible(state->gamma, current_player));
-
+    if (wasMoveFailed) {
+        printf("\x1b[30;31m");
+        printf("Unable to make that move\n");
+        printf("\x1b[0m");
+    }
 }
 
 static inline void print_game_results(State state) {
     clear();
     printf("Final board state:\n\n");
-    print_state_board(state, 0, 0);
+    print_state_board(state, 0, 0, -1);
     printf("\nScore:\n");
     for (uint32_t i = 1; i <= state->players; i++) {
         printf("Player %u: %lu \n", i, gamma_busy_fields(state->gamma, i));
@@ -162,13 +176,17 @@ static inline void setup_terminal(struct termios* original_terminal) {
     tcgetattr(STDIN_FILENO, original_terminal);
     struct termios term = *original_terminal;
     term.c_lflag &= ~(ECHO | ICANON);
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &term);
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &term)) {
+        exit(1);
+    }
     printf("\x1b[?25l"); //hide cursor
     clear();
 }
 
 static inline void reset_terminal(struct termios* original_terminal) {
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, original_terminal);
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, original_terminal)) {
+        exit(1);
+    }
     printf("\x1b[?25h"); //show cursor
     fflush(stdout);
 }
@@ -187,8 +205,36 @@ static int get_next_player(long long current_player, gamma_t* gamma, uint32_t nu
     return -1;
 }
 
-//it's kinda long, but breaking it down into smaller functions
-//would complicate
+
+//returns false if game ended
+static bool interactive_loop_step(State state, char c, uint32_t* cursor_x,
+                                  uint32_t* cursor_y, long long* player, bool* skipReadFlag) {
+    print_state_board(state, *cursor_x, *cursor_y, *player);
+    print_state_stats(state, *player, false);
+    bool wasMoveFailed = false;
+
+    if (c == ' ' || c == 'G' || c == 'g' || c == 'c' || c == 'C') {
+        if (handle_move(c, *player, *cursor_x, state->gamma_h - *cursor_y - 1, state->gamma)) {
+            *player = get_next_player(*player, state->gamma, state->players);
+            if (*player == -1) {
+                return false;
+            }
+        } else {
+            wasMoveFailed = true;
+        }
+    } else if (c == 27) {
+        if (check_for_arrow_input(&c)) {
+            handle_cursor_movement(c, cursor_x, cursor_y, state);
+        } else {
+            *skipReadFlag = true;
+        }
+    }
+    print_state_board(state, *cursor_x, *cursor_y, *player);
+    print_state_stats(state, *player, wasMoveFailed);
+    return true;
+
+}
+
 void run_interactive_mode(State state) {
     //---------setup------------
     struct termios original_terminal;
@@ -199,8 +245,8 @@ void run_interactive_mode(State state) {
     long long player = 1;
 
     bool skipReadFlag = false;
-    print_state_board(state, cursor_x, cursor_y);
-    print_state_stats(state, player);
+    print_state_board(state, cursor_x, cursor_y, player);
+    print_state_stats(state, player, false);
 
     char c = 1; // init with 0 breaks clion linter, idk why
     //--------------------------------
@@ -212,32 +258,12 @@ void run_interactive_mode(State state) {
     //character 'G' would be parsed
     while ((skipReadFlag && c != 4) || ((c = (char) getchar()) && c != 4)) {
         skipReadFlag = false;
-        print_state_board(state, cursor_x, cursor_y);
-        print_state_stats(state, player);
-
-        if (c == ' ' || c == 'G' || c == 'g' || c == 'c' || c == 'C') {
-            if (handle_move(c, player, cursor_x, state->gamma_h - cursor_y - 1, state->gamma)) {
-                player = get_next_player(player, state->gamma, state->players);
-                if (player == -1) {
-                    break;
-                }
-            }
-        } else if (c == 27) {
-            if (check_for_arrow_input(&c)) {
-                handle_cursor_movement(c, &cursor_x, &cursor_y, state);
-            } else {
-                skipReadFlag = true;
-            }
-        }
-        print_state_board(state, cursor_x, cursor_y);
-        print_state_stats(state, player);
+        interactive_loop_step(state, c, &cursor_x, &cursor_y, &player, &skipReadFlag);
     }
     //--------------------------------
 
     //----------end--------------
-    if (player == -1) {
-        print_game_results(state);
-    }
+    print_game_results(state);
     reset_terminal(&original_terminal);
     //------------------------------
 }

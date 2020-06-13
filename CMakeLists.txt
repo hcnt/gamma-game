@@ -39,7 +39,7 @@ set(SOURCE_FILES_PART2
 
 # Wskazujemy plik wykonywalny.
 add_executable(gamma ${SOURCE_FILES_PART2} ${SOURCE_FILES_BACKEND})
-#add_executable(test ${SOURCE_FILES_BACKEND} src/gamma_backend/gamma_test.c)
+add_executable(test ${SOURCE_FILES_BACKEND} src/gamma_backend/gamma_test.c)
 
 # Dodajemy obsługę Doxygena: sprawdzamy, czy jest zainstalowany i jeśli tak to:
 find_package(Doxygen)
@@ -55,34 +55,34 @@ if (DOXYGEN_FOUND)
             )
 endif (DOXYGEN_FOUND)
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    message("debug mode")
-    set(CMAKE_C_FLAGS_DEBUG "-g -I ${CMAKE_CURRENT_SOURCE_DIR}/src/gamma_backend")
-
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/debug )
-    enable_testing()
-    file(GLOB_RECURSE files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "tests/z2/part3/*.c")
-
-    set(CTEST_PARALLEL_LEVEL 4)
-    set(SOURCE_FILES_TESTING
-            src/gamma_backend/gamma.c
-            src/gamma_backend/gamma.h
-            src/gamma_backend/player.h
-            src/gamma_backend/gamma_struct.h
-            src/gamma_backend/vector.c
-            src/gamma_backend/vector.h
-            src/gamma_backend/gamma_struct.c
-            src/gamma_backend/board.h
-            src/gamma_backend/board.c)
-
-    add_library(source OBJECT ${SOURCE_FILES_TESTING})
-    foreach (file ${files})
-        message(${file})
-        string(REGEX REPLACE "(^.*/|\\.[^.]*$)" "" file_without_ext ${file})
-        string(REGEX REPLACE "tests/z2/part3/engine_tests|/[^/]*\\.c$" "" directory ${file})
-        add_executable(${file_without_ext} $<TARGET_OBJECTS:source> ${file})
-        add_test(${file_without_ext} ${file_without_ext})
-        set_tests_properties(${file_without_ext} PROPERTIES LABELS "${directory}")
-
-    endforeach ()
-endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
+#if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+#    message("debug mode")
+#    set(CMAKE_C_FLAGS_DEBUG "-g -I ${CMAKE_CURRENT_SOURCE_DIR}/src/gamma_backend")
+#
+#    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/debug )
+#    enable_testing()
+#    file(GLOB_RECURSE files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "tests/z2/part3/*.c")
+#
+#    set(CTEST_PARALLEL_LEVEL 4)
+#    set(SOURCE_FILES_TESTING
+#            src/gamma_backend/gamma.c
+#            src/gamma_backend/gamma.h
+#            src/gamma_backend/player.h
+#            src/gamma_backend/gamma_struct.h
+#            src/gamma_backend/vector.c
+#            src/gamma_backend/vector.h
+#            src/gamma_backend/gamma_struct.c
+#            src/gamma_backend/board.h
+#            src/gamma_backend/board.c)
+#
+#    add_library(source OBJECT ${SOURCE_FILES_TESTING})
+##    foreach (file ${files})
+##        message(${file})
+##        string(REGEX REPLACE "(^.*/|\\.[^.]*$)" "" file_without_ext ${file})
+##        string(REGEX REPLACE "tests/z2/part3/engine_tests|/[^/]*\\.c$" "" directory ${file})
+##        add_executable(${file_without_ext} $<TARGET_OBJECTS:source> ${file})
+##        add_test(${file_without_ext} ${file_without_ext})
+##        set_tests_properties(${file_without_ext} PROPERTIES LABELS "${directory}")
+##
+##    endforeach ()
+#endif (CMAKE_BUILD_TYPE STREQUAL "Debug")

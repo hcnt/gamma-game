@@ -123,9 +123,6 @@ bool gamma_golden_possible(gamma_t* g, uint32_t player) {
     if (get_number_of_players_areas(g, player) != get_max_areas(g)) {
         return true;
     }
-
-//    update_cut_points(g);
-//    update_areas(g);
     //check if there exists at least one golden move that isn't illegal
     for (uint32_t i = 0; i < get_width(g); i++) {
         for (uint32_t j = 0; j < get_height(g); j++) {

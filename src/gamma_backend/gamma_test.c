@@ -440,38 +440,6 @@ static int golden_move(void) {
     return PASS;
 }
 
-/* Testuje zgodność implementacji funkcji golden_possible z jej opisem. */
-static int golden_possible(void) {
-    gamma_t* g = gamma_new(10, 10, 3, 1);
-    assert(g != NULL);
-
-    assert(gamma_move(g, 2, 1, 1));
-    assert(gamma_move(g, 2, 1, 2));
-    assert(gamma_move(g, 2, 1, 3));
-
-    assert(gamma_golden_possible(g, 1));
-    assert(!gamma_golden_move(g, 1, 1, 2));
-    assert(!gamma_golden_move(g, 1, 2, 2));
-    assert(gamma_golden_move(g, 1, 1, 1));
-
-    gamma_delete(g);
-    g = gamma_new(9, 9, 2, 2);
-    assert(g != NULL);
-
-    assert(gamma_move(g, 2, 1, 1));
-    assert(gamma_move(g, 2, 1, 2));
-    assert(gamma_move(g, 2, 1, 3));
-    assert(gamma_move(g, 1, 5, 4));
-    assert(gamma_move(g, 1, 4, 5));
-    assert(gamma_golden_possible(g, 1));
-    assert(!gamma_golden_move(g, 1, 1, 1));
-    assert(!gamma_golden_move(g, 1, 1, 2));
-    assert(!gamma_golden_move(g, 1, 1, 3));
-
-    gamma_delete(g);
-    return PASS;
-}
-
 /* Testuje liczenie obszarów jednego gracza. */
 static int areas(void) {
     gamma_t* g = gamma_new(31, 37, 1, 42);
@@ -657,82 +625,6 @@ static int border(void) {
     return PASS;
 }
 
-/* Wykonanie niektórych funkcji w tym teście może się nie udać z powodu braku
- * pamięci, ale nie powinno to skutkować załamaniem wykonywania programu. */
-static int memory_alloc(void) {
-    gamma_t* g = gamma_new(SMALL_BOARD_SIZE, SMALL_BOARD_SIZE, 2, 2);
-    assert(g != NULL);
-
-    /* Alokujemy całą dostępną pamięć. */
-    for (size_t s = 1024 * 1024 * 1024; s >= 1; s /= 2) {
-        void* p;
-        do {
-            p = malloc(s);
-        } while (p);
-    }
-
-    while (gamma_new(MIDDLE_BOARD_SIZE, MIDDLE_BOARD_SIZE, 10, 3) != NULL);
-
-    for (uint32_t x = 0; x < SMALL_BOARD_SIZE; ++x)
-        for (uint32_t y = 0; y < SMALL_BOARD_SIZE; ++y)
-            gamma_move(g, 1, x, y);
-
-    /* To jest test alokacji pamięci – nie zwalniamy jej. */
-    return MEM_PASS;
-}
-
-/* Testuje odporność implementacji na duże wartości parametrów w gamma_new. */
-static int big_board(void) {
-    static const gamma_param_t game[] = {
-            {UINT32_MAX,        UINT32_MAX,        UINT32_MAX,        UINT32_MAX},
-            {2,                 UINT32_MAX,        UINT32_MAX,        UINT32_MAX},
-            {UINT32_MAX,    2,                     UINT32_MAX,        UINT32_MAX},
-            {UINT32_MAX,        UINT32_MAX, 2,                        UINT32_MAX},
-            {UINT32_MAX,        UINT32_MAX,        UINT32_MAX, 5},
-            {UINT32_MAX,    2,              2,                 5},
-            {2,                 UINT32_MAX, 2,                 5},
-            {2,             2,                     UINT32_MAX, 5},
-            {2,             2,              2,                        UINT32_MAX},
-            {1 << 16,       1 << 16,        2,                 5},
-            {(1 << 24) + 1, 1 << 8,         2,                 5},
-            {(1 << 15) + 1, (1 << 14) + 1,  2,                 5},
-            {(1 << 14) + 1, (1 << 13) + 1,  2,                 5},
-            {(1 << 13) + 1, (1 << 12) + 1,  2,                 5},
-            {(1 << 12) + 1, (1 << 11) + 1,  2,                 5},
-            {(1 << 11) + 1, (1 << 10) + 1,  2,                 5},
-            {BIG_BOARD_SIZE,    BIG_BOARD_SIZE,    BIG_BOARD_SIZE,    BIG_BOARD_SIZE},
-            {MIDDLE_BOARD_SIZE, MIDDLE_BOARD_SIZE, MIDDLE_BOARD_SIZE, MIDDLE_BOARD_SIZE},
-            {SMALL_BOARD_SIZE,  SMALL_BOARD_SIZE,  SMALL_BOARD_SIZE,  SMALL_BOARD_SIZE},
-    };
-
-    unsigned success = 0;
-    for (size_t i = 0; i < SIZE(game);
-    ++i) {
-        errno = 0;
-        gamma_t* g = gamma_new(game[i].width, game[i].height,
-                               game[i].players, game[i].areas);
-        if (g != NULL) {
-            uint64_t size = (uint64_t) game[i].width * (uint64_t) game[i].height;
-            assert(gamma_free_fields(g, game[i].players) == size);
-            // Przynajmniej cztery ruchy powinny się udać.
-            assert(gamma_move(g, game[i].players, 0, 0));
-            assert(gamma_move(g, game[i].players, 0, game[i].height - 1));
-            assert(gamma_move(g, game[i].players, game[i].width - 1, 0));
-            assert(gamma_move(g, game[i].players, game[i].width - 1, game[i].height - 1));
-            assert(gamma_free_fields(g, game[i].players) == size - 4);
-            assert(gamma_busy_fields(g, game[i].players) == 4);
-            gamma_delete(g);
-            ++success;
-        } else {
-            assert(!test_errno || errno == ENOMEM);
-        }
-    }
-    // Przynajmniej jedną z tych gier powinno się udać utworzyć.
-    assert(success > 0);
-
-    return PASS;
-}
-
 /* Testuje ogranicznenia na rozmiar planszy w gamma_new. */
 static int middle_board(void) {
     unsigned success = 0;
@@ -779,12 +671,9 @@ static const test_list_t test_list[] = {
         TEST(delete_null),
         TEST(normal_move),
         TEST(golden_move),
-        TEST(golden_possible),
         TEST(areas),
         TEST(tree),
         TEST(border),
-//        TEST(memory_alloc),
-//        TEST(big_board),
         TEST(middle_board),
 };
 
